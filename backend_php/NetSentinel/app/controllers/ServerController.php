@@ -20,6 +20,14 @@ class ServerController
         echo json_encode(["servers" => $this->serverService->getServersWithStatus()]);
     }
 
+    public function getServer($id)
+    {
+        echo json_encode([
+            "server" => $this->serverService->getServerByIdWithStatus($id)
+        ]);
+    }
+
+
     public function addServer($data)
     {
         $errors = ServerValidator::validateInsert($data);
@@ -68,5 +76,17 @@ class ServerController
             return;
         }
         echo json_encode($this->serverService->deleteServer($serverId));
+    }
+
+    public function checkStatusAll()
+    {
+        echo json_encode($this->serverService->checkStatus());
+    }
+
+    public function checkAll(): void
+    {
+        $this->serverService->checkAllStatuses();
+
+        echo json_encode(['message' => 'Tüm sunucular kontrol edildi.']);
     }
 }

@@ -13,6 +13,10 @@ class ServerValidator {
         if (empty($data['name'])) {
             $errors['name'] = 'Server name is required.';
         }
+        
+        if (!isset($data['location']) || empty($data['location'])) {
+            $errors['location'] = 'Location is required.';
+        }
 
         if (empty($data['assigned_id'])) {
             $errors['assigned_id'] = 'Assigned ID is required.';
@@ -43,6 +47,10 @@ class ServerValidator {
 
         if (!isset($data['name']) || empty($data['name'])) {
             $errors['name'] = 'Server name is required.';
+        }
+
+        if (!isset($data['location']) || empty($data['location'])) {
+            $errors['location'] = 'Location is required.';
         }
 
         if (!isset($data['assigned_id']) || empty($data['assigned_id'])) {

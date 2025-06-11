@@ -9,10 +9,12 @@ try {
     $sql = "CREATE TABLE IF NOT EXISTS servers (
         id INT AUTO_INCREMENT PRIMARY KEY,
         ip VARCHAR(45) NOT NULL UNIQUE,
-        name VARCHAR(255) NOT NULL,
-        assigned_id VARCHAR(50) NOT NULL,
+        name VARCHAR(200) NOT NULL,
+        location VARCHAR(200) NOT NULL,
+        assigned_id VARCHAR(50) NOT NULL UNIQUE,
         is_active BOOLEAN DEFAULT 0,
         last_checks JSON NOT NULL,
+        last_check_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );";
 

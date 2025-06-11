@@ -3,6 +3,9 @@
 return [
     "GET" => [
         "servers" => "ServerController@getServers",
+        "server" => "ServerController@getServer",
+        "status" => "ServerController@checkStatusAll",
+        "check" => "ServerController@checkAll",
     ],
     "POST" => [
         "servers" => "ServerController@addServer",
@@ -11,6 +14,6 @@ return [
         "servers/edit" => "ServerController@editServer",
     ],
     "DELETE" => [
-        "servers/{id}" => "ServerController@deleteServer",
+        "servers/delete" => "ServerController@deleteServer",
     ]
 ];

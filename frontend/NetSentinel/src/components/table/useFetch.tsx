@@ -1,20 +1,40 @@
 import { useState, useEffect } from "react";
 
-const useFetch = (url: string) => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+function useFetch<T = unknown>(url: string): { data: T | null; loading: boolean; error: Error | null } {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
+    setLoading(true);
+    setError(null);
+
     fetch(url)
-      .then((res) => res.json())
-      .then((result) => {
-        setData(result.servers);
-        setLoading(false);
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
       })
-      .catch((error) => console.error("API call failed:", error));
+      .then((json: T) => {
+        if (isMounted) {
+          setData(json);
+          setLoading(false);
+        }
+      })
+      .catch((err: Error) => {
+        if (isMounted) {
+          setError(err);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [url]);
 
-  return { data, loading };
-};
+  return { data, loading, error };
+}
 
 export default useFetch;

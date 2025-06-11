@@ -26,12 +26,15 @@ class RequestHandler
         }
 
         [$controllerName, $methodName, $id] = $resolved;
-
         require_once __DIR__ . '/../controllers/' . $controllerName . '.php';
-
+        
         $controller = new $controllerName($this->pdo);
 
-        $input = in_array($method, ['POST', 'PUT']) ? json_decode(file_get_contents("php://input"), true) : [];
+        if (in_array($method, ['POST', 'PUT'])) {
+            $input = json_decode(file_get_contents("php://input"), true);
+        } else {
+            $input = [];
+        }
 
         if ($id !== null) {
             if (!is_array($input)) {

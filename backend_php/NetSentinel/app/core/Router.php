@@ -13,13 +13,20 @@ class Router
     {
         $segments = explode('/', trim($path, '/'));
         $resource = $segments[0] ?? null;
-        $action = $segments[1] ?? null;
+        $second = $segments[1] ?? null;
 
-        $routeKey = $resource . ($action ? "/$action" : '');
-
-        if (isset($this->routes[$method][$routeKey])) {
-            $controllerAction = explode('@', $this->routes[$method][$routeKey]);
+        // 1) resource/second şeklinde route var mı?
+        $routeKeyWithAction = $resource . ($second ? "/$second" : '');
+        if (isset($this->routes[$method][$routeKeyWithAction])) {
+            $controllerAction = explode('@', $this->routes[$method][$routeKeyWithAction]);
             $id = $segments[2] ?? null;
+            return [$controllerAction[0], $controllerAction[1], $id];
+        }
+
+        // 2) Sadece resource var mı? Varsa 2.segment id olabilir.
+        if (isset($this->routes[$method][$resource])) {
+            $controllerAction = explode('@', $this->routes[$method][$resource]);
+            $id = $second; // 2.segment id olarak
             return [$controllerAction[0], $controllerAction[1], $id];
         }
 

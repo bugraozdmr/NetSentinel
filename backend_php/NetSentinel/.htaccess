@@ -7,7 +7,7 @@ RewriteRule ^(.*)$ app/public/index.php?route=$1 [QSA,L]
 
 <IfModule mod_headers.c>
     Header set Access-Control-Allow-Origin "*"
-    Header set Access-Control-Allow-Methods "GET, POST, DELETE, OPTIONS"
+    Header set Access-Control-Allow-Methods "GET, POST,PUT, DELETE, OPTIONS"
     Header set Access-Control-Allow-Headers "Content-Type"
 </IfModule>
 

@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../utils/pingServer.php';
+
 
 class ServerModel
 {
@@ -23,10 +25,31 @@ class ServerModel
         }
     }
 
+    public function getServerById($id)
+    {
+        try {
+            $stmt = $this->pdo->prepare("SELECT * FROM servers WHERE id = :id");
+            $stmt->execute(['id' => $id]);
+            $server = $stmt->fetch();
+
+            if (!$server) {
+                // Kayıt yoksa null dönebiliriz
+                return null;
+            }
+
+            return $server;
+        } catch (PDOException $e) {
+            error_log("getServerById error: " . $e->getMessage());
+            http_response_code(500);
+            return ["error" => "Veritabanı hatası"];
+        }
+    }
+
+
     public function insertServer($data)
     {
         try {
-            $stmt = $this->pdo->prepare("INSERT INTO servers (ip, name, assigned_id, is_active, last_checks) VALUES (:ip, :name, :assigned_id, :is_active, :last_checks)");
+            $stmt = $this->pdo->prepare("INSERT INTO servers (ip, name, location,assigned_id, is_active, last_checks) VALUES (:ip, :name, :location, :assigned_id, :is_active, :last_checks)");
 
             $is_active = isset($data['is_active']) ? ($data['is_active'] ? 1 : 0) : 0;
             $last_checks = $data['last_checks'] ?? '{}';
@@ -34,6 +57,7 @@ class ServerModel
             $stmt->execute([
                 'ip' => $data['ip'],
                 'name' => $data['name'],
+                'location' => $data['location'],
                 'assigned_id' => $data['assigned_id'],
                 'is_active' => $is_active,
                 'last_checks' => $last_checks,
@@ -48,11 +72,12 @@ class ServerModel
         }
     }
 
-    public function updateServer(int $id, array $data) {
+    public function updateServer(int $id, array $data)
+    {
         try {
             $stmt = $this->pdo->prepare("
                 UPDATE servers 
-                SET ip = :ip, name = :name, assigned_id = :assigned_id 
+                SET ip = :ip, name = :name, assigned_id = :assigned_id , location = :location
                 WHERE id = :id
             ");
 
@@ -60,11 +85,13 @@ class ServerModel
                 'ip' => $data['ip'],
                 'name' => $data['name'],
                 'assigned_id' => $data['assigned_id'],
+                'location' => $data['location'],
                 'id' => $id,
             ]);
 
             if ($stmt->rowCount() === 0) {
-                return ["error" => "No server found with the provided ID or data is the same."];
+                // return ["error" => "No server found with the provided ID or data is the same."];
+                return ["error" => "Something went wrong !"];
             }
 
             return ["message" => "Server updated successfully"];
@@ -87,5 +114,60 @@ class ServerModel
             http_response_code(500);
             return ["error" => "Veritabanı hatası"];
         }
+    }
+
+    public function checkStatus()
+    {
+        try {
+            $stmt = $this->pdo->query("SELECT id, ip, last_checks ,location FROM servers");
+            $servers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($servers as $server) {
+                $status = pingServer($server['ip']);
+                $id = $server['id'];
+
+                $lastChecks = json_decode($server['last_checks'], true);
+                if (!is_array($lastChecks)) {
+                    $lastChecks = [];
+                }
+
+                $lastChecks[] = (int)$status;
+
+                if (count($lastChecks) > 10) {
+                    array_shift($lastChecks);
+                }
+
+                $update = $this->pdo->prepare("
+                UPDATE servers 
+                SET is_active = ?, 
+                    last_checks = ?, 
+                    last_check_at = NOW() 
+                WHERE id = ?
+            ");
+                $update->execute([(int)$status, json_encode($lastChecks), $id]);
+            }
+
+            return ["message" => "Sunucu durumları başarıyla güncellendi"];
+        } catch (PDOException $e) {
+            error_log("checkStatus error: " . $e->getMessage());
+            http_response_code(500);
+            return ["error" => "Veritabanı hatası"];
+        }
+    }
+
+    public function getAllServersForStatus(): array
+    {
+        $stmt = $this->pdo->query("SELECT id, ip, last_checks, location FROM servers");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function updateStatus(int $id, int $isActive, string $lastChecks,  string $location): void
+    {
+        $stmt = $this->pdo->prepare("
+        UPDATE servers
+        SET is_active = ?, last_checks = ?, location = ?, last_check_at = NOW()
+        WHERE id = ?
+    ");
+        $stmt->execute([$isActive, $lastChecks, $location , $id]);
     }
 }

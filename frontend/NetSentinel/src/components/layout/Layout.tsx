@@ -12,7 +12,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <Navbar />
       
       <main className="flex-1 p-6">
-          {/* Table burada çağrılıyor */}
         {children}
       </main>
     </div>
