@@ -29,7 +29,8 @@ const Table: React.FC<TableProps> = ({ servers }) => {
       (server) =>
         server.ip.toLowerCase().includes(lowerSearch) ||
         server.name.toLowerCase().includes(lowerSearch) ||
-        server.assigned_id.toLowerCase().includes(lowerSearch)
+        server.assigned_id.toLowerCase().includes(lowerSearch) ||
+        server.location.toLowerCase().includes(lowerSearch)
     );
   }, [searchTerm, rows]);
 

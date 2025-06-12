@@ -1,0 +1,38 @@
+# docker-compose -p netsentinel down
+# docker-compose -p netsentinel up --build -d
+
+services:
+  frontend:
+    build:
+      context: ./frontend/Netsentinel
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./frontend/Netsentinel/.env
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend_php/Netsentinel
+    ports:
+      - "8000:80"
+    env_file:
+      - ./backend_php/Netsentinel/.env
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: netsentinel
+      MYSQL_USER: nsuser
+      MYSQL_PASSWORD: nspassword
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:

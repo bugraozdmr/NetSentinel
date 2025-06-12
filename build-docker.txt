@@ -1,0 +1,9 @@
+# backend
+docker build -t grant3458/netsentinel-backend:1.0.0 ./backend_php/Netsentinel
+
+# frontend
+docker build -t grant3458/netsentinel-frontend:1.0.0 ./frontend/Netsentinel
+
+# push
+docker push grant3458/netsentinel-backend:1.0.0
+docker push grant3458/netsentinel-frontend:1.0.0
