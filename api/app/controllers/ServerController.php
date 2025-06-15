@@ -88,10 +88,6 @@ class ServerController
         echo json_encode($this->serverService->deleteServer($serverId));
     }
 
-    public function checkStatusAll()
-    {
-        echo json_encode($this->serverService->checkStatus());
-    }
 
     public function checkAll(): void
     {

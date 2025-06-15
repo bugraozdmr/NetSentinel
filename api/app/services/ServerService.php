@@ -55,10 +55,6 @@ class ServerService
         return $this->serverModel->deleteServer($serverId);
     }
 
-    public function checkStatus()
-    {
-        return $this->serverModel->checkStatus();
-    }
 
     public function checkAllStatuses()
     {
@@ -72,7 +68,6 @@ class ServerService
         foreach ($servers as $index => $server) {
             $pipes = [];
             $cmd = escapeshellcmd(Config::getPhpPath()) . ' ' . escapeshellarg($pingScript) . ' ' . escapeshellarg($server['ip']);
-
 
             $processes[$index] = proc_open(
                 $cmd,
@@ -117,7 +112,13 @@ class ServerService
                 $lastChecks = [];
             }
 
-            $lastChecks[] = $status;
+            $currentTime = date('Y-m-d H:i:s');
+
+            $lastChecks[] = [
+                'time' => $currentTime,
+                'status' => $status
+            ];
+
             if (count($lastChecks) > 10) {
                 array_shift($lastChecks);
             }

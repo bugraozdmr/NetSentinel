@@ -18,17 +18,58 @@ $(document).ready(function () {
 
   function renderStatusBars(json) {
     let checks = [];
+
     try {
-      checks = JSON.parse(json);
-    } catch {}
-    const bars = Array.from({ length: 10 }, (_, i) => {
-      const val = checks[i];
-      if (val === 1)
-        return '<div class="w-2 h-4 bg-green-500 rounded-sm"></div>';
-      if (val === 0) return '<div class="w-2 h-4 bg-red-500 rounded-sm"></div>';
-      return '<div class="w-2 h-4 bg-gray-400 rounded-sm"></div>';
+      const parsed = JSON.parse(json);
+
+      if (Array.isArray(parsed)) {
+        checks = parsed;
+      } else {
+        checks = [];
+      }
+    } catch (e) {
+      checks = [];
+    }
+
+    const maxChecks = 10;
+
+    if (!Array.isArray(checks)) {
+      checks = [];
+    }
+
+    const emptyCount = maxChecks - checks.length;
+    const normalized = [
+      ...Array(emptyCount).fill(null),
+      ...checks.slice(-maxChecks),
+    ];
+
+    const bars = normalized.map((check) => {
+      let color = "bg-gray-300";
+      let tooltip = "Henüz kontrol edilmedi";
+
+      if (check && typeof check === "object" && "status" in check) {
+        if (check.status === 1) {
+          color = "bg-green-500";
+          tooltip = check.time || "Tarih yok";
+        } else if (check.status === 0) {
+          color = "bg-red-500";
+          tooltip = check.time || "Tarih yok";
+        }
+      }
+
+      return `
+      <div class="group relative cursor-default">
+        <span class="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 text-white text-[10px] px-1 py-[1px] opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none select-none">
+          ${tooltip}
+        </span>
+        <div class="w-3 h-5 ${color} rounded-sm group-hover:-translate-y-[2px] transition-transform"></div>
+      </div>
+    `;
     });
-    return bars.join("");
+
+    return `<div class="flex gap-[2px] justify-end items-end">${bars.join(
+      ""
+    )}</div>`;
   }
 
   function renderTable(servers) {
@@ -36,11 +77,11 @@ $(document).ready(function () {
 
     if (servers.length === 0) {
       $tbody.append(`
-        <tr>
-          <td colspan="8" class="text-center py-6 text-slate-400">
-            Arama kriterlerine uygun sunucu bulunamadı.
-          </td>
-        </tr>`);
+      <tr>
+        <td colspan="8" class="text-center py-6 text-slate-400">
+          Arama kriterlerine uygun sunucu bulunamadı.
+        </td>
+      </tr>`);
       return;
     }
 
@@ -54,38 +95,41 @@ $(document).ready(function () {
         : "Henüz kontrol edilmedi";
 
       $tbody.append(`
-        <tr class="hover:bg-slate-50 border-b border-slate-200 transition-colors">
-          <td class="p-4 py-5 text-sm font-semibold text-slate-800">${server.ip}</td>
-          <td class="p-4 py-5 text-sm text-slate-500">${server.name}</td>
-          <td class="p-4 py-5 text-sm text-slate-500">${server.assigned_id}</td>
-          <td class="p-4 py-5 text-sm text-slate-500">${server.location}</td>
-          <td class="p-4 py-5 text-sm font-semibold ${statusColor}">${statusText}</td>
-          <td class="p-4 py-5 text-sm text-slate-500">${lastCheck}</td>
-          <td class="p-4 py-5 text-sm"><div class="flex gap-[2px]">${checks}</div></td>
-          <td class="p-4 py-5 text-sm text-slate-600 flex gap-2 items-center">
-            <button
-              type="button"
-              title="Düzenle"
-              aria-label="Düzenle"
-              data-id="${server.id}"
-              class="edit-btn inline-flex items-center justify-center size-9 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition"
-            >
-              <i class="fa fa-pen"></i>
-            </button>
+      <tr class="hover:bg-slate-50 border-b border-slate-200 transition-colors">
+        <td class="p-4 py-5 text-sm font-semibold text-slate-800">${server.ip}</td>
+        <td class="p-4 py-5 text-sm text-slate-500">${server.name}</td>
+        <td class="p-4 py-5 text-sm text-slate-500">${server.assigned_id}</td>
+        <td class="p-4 py-5 text-sm text-slate-500">${server.location}</td>
+        <td class="p-4 py-5 text-sm font-semibold ${statusColor}">${statusText}</td>
+        <td class="p-4 py-5 text-sm text-slate-500">${lastCheck}</td>
+        <td class="p-4 py-5 text-sm">
+          <div class="flex flex-row-reverse gap-1 justify-end">
+            ${checks}
+          </div>
+        </td>
+        <td class="p-4 py-5 text-sm text-slate-600 flex gap-2 items-center">
+          <button
+            type="button"
+            title="Düzenle"
+            aria-label="Düzenle"
+            data-id="${server.id}"
+            class="edit-btn inline-flex items-center justify-center size-9 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition"
+          >
+            <i class="fa fa-pen"></i>
+          </button>
 
-            <button
-              type="button"
-              title="Sil"
-              aria-label="Sil"
-              data-id="${server.id}"
-              class="inline-flex items-center justify-center size-9 rounded-full bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition delete-btn"
-            >
-              <i class="fas fa-trash-alt text-base"></i>
-            </button>
-          </td>
-
-        </tr>
-      `);
+          <button
+            type="button"
+            title="Sil"
+            aria-label="Sil"
+            data-id="${server.id}"
+            class="inline-flex items-center justify-center size-9 rounded-full bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition delete-btn"
+          >
+            <i class="fas fa-trash-alt text-base"></i>
+          </button>
+        </td>
+      </tr>
+    `);
     });
   }
 

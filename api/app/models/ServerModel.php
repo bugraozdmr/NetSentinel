@@ -116,44 +116,6 @@ class ServerModel
         }
     }
 
-    public function checkStatus()
-    {
-        try {
-            $stmt = $this->pdo->query("SELECT id, ip, last_checks ,location FROM servers");
-            $servers = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            foreach ($servers as $server) {
-                $status = pingServer($server['ip']);
-                $id = $server['id'];
-
-                $lastChecks = json_decode($server['last_checks'], true);
-                if (!is_array($lastChecks)) {
-                    $lastChecks = [];
-                }
-
-                $lastChecks[] = (int)$status;
-
-                if (count($lastChecks) > 10) {
-                    array_shift($lastChecks);
-                }
-
-                $update = $this->pdo->prepare("
-                UPDATE servers 
-                SET is_active = ?, 
-                    last_checks = ?, 
-                    last_check_at = NOW() 
-                WHERE id = ?
-            ");
-                $update->execute([(int)$status, json_encode($lastChecks), $id]);
-            }
-
-            return ["message" => "Sunucu durumları başarıyla güncellendi"];
-        } catch (PDOException $e) {
-            error_log("checkStatus error: " . $e->getMessage());
-            http_response_code(500);
-            return ["error" => "Veritabanı hatası"];
-        }
-    }
 
     public function getAllServersForStatus(): array
     {
@@ -168,6 +130,6 @@ class ServerModel
         SET is_active = ?, last_checks = ?, location = ?, last_check_at = NOW()
         WHERE id = ?
     ");
-        $stmt->execute([$isActive, $lastChecks, $location , $id]);
+        $stmt->execute([$isActive, $lastChecks, $location, $id]);
     }
 }

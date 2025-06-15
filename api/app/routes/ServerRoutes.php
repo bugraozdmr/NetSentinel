@@ -4,7 +4,6 @@ return [
     "GET" => [
         "servers" => "ServerController@getServers",
         "server" => "ServerController@getServer",
-        "status" => "ServerController@checkStatusAll",
         "check" => "ServerController@checkAll",
     ],
     "POST" => [
