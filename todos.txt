@@ -1,2 +1,5 @@
 - Localization
 - Mobile Version
+- manual control for one specific server in details page
+- advanced log mechanism
+- making this as service with .conf file

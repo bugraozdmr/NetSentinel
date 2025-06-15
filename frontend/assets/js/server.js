@@ -85,6 +85,13 @@ $(document).ready(function () {
       return;
     }
 
+    const dummyPorts = [
+      { number: 80, isOpen: true },
+      { number: 443, isOpen: true },
+      { number: 22, isOpen: false },
+      { number: 8080, isOpen: false },
+    ];
+
     servers.forEach((server) => {
       const statusText = server.is_active == 1 ? "Running" : "Passive";
       const statusColor =
@@ -96,7 +103,9 @@ $(document).ready(function () {
 
       $tbody.append(`
       <tr class="hover:bg-slate-50 border-b border-slate-200 transition-colors">
-        <td class="p-4 py-5 text-sm font-semibold text-slate-800">${server.ip}</td>
+        <td class="p-4 py-5 text-sm font-semibold text-slate-800">${
+          server.ip
+        }</td>
         <td class="p-4 py-5 text-sm text-slate-500">${server.name}</td>
         <td class="p-4 py-5 text-sm text-slate-500">${server.assigned_id}</td>
         <td class="p-4 py-5 text-sm text-slate-500">${server.location}</td>
@@ -108,6 +117,16 @@ $(document).ready(function () {
           </div>
         </td>
         <td class="p-4 py-5 text-sm text-slate-600 flex gap-2 items-center">
+          <button
+            type="button"
+            title="Detayları Gör"
+            aria-label="Detayları Gör"
+            data-id="${server.id}"
+            class="inline-flex items-center justify-center size-9 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition"
+          >
+            <i class="fa fa-eye"></i>
+          </button>
+
           <button
             type="button"
             title="Düzenle"
@@ -129,7 +148,31 @@ $(document).ready(function () {
           </button>
         </td>
       </tr>
-    `);
+
+      <!-- PORT DURUMLARINI GÖSTEREN ALT SATIR -->
+      <tr class="bg-gray-50 border-b border-gray-200">
+        <td colspan="8" class="p-3">
+          <div class="flex flex-wrap gap-2 items-center">
+            ${dummyPorts
+              .map(
+                (port) => `
+              <div class="flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow-sm border ${
+                port.isOpen
+                  ? "border-green-400 bg-green-50 text-green-700"
+                  : "border-red-400 bg-red-50 text-red-700"
+              }">
+                <span class="font-semibold">${port.number}</span>
+                <span class="w-3 h-3 rounded-full ${
+                  port.isOpen ? "bg-green-500" : "bg-red-500"
+                }"></span>
+              </div>
+            `
+              )
+              .join("")}
+          </div>
+        </td>
+      </tr>
+`);
     });
   }
 

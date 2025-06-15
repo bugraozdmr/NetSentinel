@@ -1,6 +1,4 @@
-<link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/status-bar.css">
-
-<div class="max-w-4xl mx-auto mt-8 p-6 bg-white shadow-lg rounded-lg">
+<div class="max-w-6xl mx-auto mt-8 p-8 bg-white shadow-lg rounded-lg">
     <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
         <div>
             <h2 class="text-2xl font-semibold text-center sm:text-left mb-1">Sunucu Durumları</h2>

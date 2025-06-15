@@ -24,7 +24,7 @@ class RequestHandler
             echo json_encode(["error" => "Route couldn't found"]);
             return;
         }
-
+        
         [$controllerName, $methodName, $id] = $resolved;
         require_once __DIR__ . '/../controllers/' . $controllerName . '.php';
         
