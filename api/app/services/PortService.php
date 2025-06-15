@@ -32,10 +32,11 @@ class PortService
      * Delete Port
      * $portId: int
      */
-    public function removePort(int $portId)
+    public function removePorts(array $portIds)
     {
-        return $this->portModel->deletePort($portId);
+        return $this->portModel->deletePorts(['ports' => $portIds]);
     }
+
 
     /**
      * List ports based on server_id

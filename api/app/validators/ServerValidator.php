@@ -1,7 +1,9 @@
 <?php
 
-class ServerValidator {
-    public static function validateInsert(array $data): array {
+class ServerValidator
+{
+    public static function validateInsert(array $data): array
+    {
         $errors = [];
 
         if (empty($data['ip'])) {
@@ -13,7 +15,7 @@ class ServerValidator {
         if (empty($data['name'])) {
             $errors['name'] = 'Server name is required.';
         }
-        
+
         if (!isset($data['location']) || empty($data['location'])) {
             $errors['location'] = 'Location is required.';
         }
@@ -33,10 +35,27 @@ class ServerValidator {
             }
         }
 
+        if (isset($data['ports'])) {
+            if (!is_array($data['ports'])) {
+                $errors['ports'] = 'Ports must be an array.';
+            } else {
+                foreach ($data['ports'] as $index => $port) {
+                    $portNumber = is_array($port) ? ($port['port_number'] ?? null) : $port;
+
+                    if (!is_numeric($portNumber)) {
+                        $errors["ports[$index]"] = 'Port number must be a numeric value.';
+                    } elseif ($portNumber < 1 || $portNumber > 65535) {
+                        $errors["ports[$index]"] = 'Port number must be between 1 and 65535.';
+                    }
+                }
+            }
+        }
+
         return $errors;
     }
 
-    public static function validateUpdate(array $data): array {
+    public static function validateUpdate(array $data): array
+    {
         $errors = [];
 
         if (!isset($data['ip']) || empty($data['ip'])) {
@@ -55,6 +74,22 @@ class ServerValidator {
 
         if (!isset($data['assigned_id']) || empty($data['assigned_id'])) {
             $errors['assigned_id'] = 'Assigned ID is required.';
+        }
+
+        if (isset($data['ports'])) {
+            if (!is_array($data['ports'])) {
+                $errors['ports'] = 'Ports must be an array.';
+            } else {
+                foreach ($data['ports'] as $index => $port) {
+                    $portNumber = is_array($port) ? ($port['port_number'] ?? null) : $port;
+
+                    if (!is_numeric($portNumber)) {
+                        $errors["ports[$index]"] = 'Port number must be a numeric value.';
+                    } elseif ($portNumber < 1 || $portNumber > 65535) {
+                        $errors["ports[$index]"] = 'Port number must be between 1 and 65535.';
+                    }
+                }
+            }
         }
 
         return $errors;

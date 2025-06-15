@@ -45,7 +45,7 @@ class PortModel
         } catch (PDOException $e) {
             error_log("insertPort error: " . $e->getMessage());
             http_response_code(500);
-            return ["error" => "Database error: Something went wrong" . '---' . $e->getMessage()];
+            return ["error" => "Database error: Something went wrong"];
         } catch (Exception $e) {
             error_log("insertPort error: " . $e->getMessage());
             http_response_code(400);
@@ -54,18 +54,37 @@ class PortModel
     }
 
 
-    public function deletePort($portId)
+    public function deletePorts($data)
     {
         try {
+            $ports = [];
+
+            if (isset($data['ports']) && is_array($data['ports'])) {
+                $ports = $data['ports'];
+            } else if (isset($data['portId'])) {
+                $ports = [$data['portId']];
+            } else {
+                throw new Exception("Port IDs are missing.");
+            }
+
             $stmt = $this->pdo->prepare("DELETE FROM server_ports WHERE id = :id");
-            $stmt->execute(['id' => $portId]);
-            return ["message" => "Port deleted successfully"];
+
+            foreach ($ports as $portId) {
+                $stmt->execute(['id' => $portId]);
+            }
+
+            return ["message" => "Port(s) deleted successfully"];
         } catch (PDOException $e) {
-            error_log("deletePort error: " . $e->getMessage());
+            error_log("deletePorts error: " . $e->getMessage());
             http_response_code(500);
             return ["error" => "Database error: Something went wrong"];
+        } catch (Exception $e) {
+            error_log("deletePorts error: " . $e->getMessage());
+            http_response_code(400);
+            return ["error" => $e->getMessage()];
         }
     }
+
 
     public function getPortsByServer(int $serverId)
     {

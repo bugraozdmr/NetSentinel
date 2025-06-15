@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../models/ServerModel.php';
+require_once __DIR__ . '/PortService.php';
 require_once __DIR__ . '/../utils/config.php';
 
 Config::load();
@@ -7,10 +8,12 @@ Config::load();
 class ServerService
 {
     private $serverModel;
+    private $portService;
 
     public function __construct($pdo)
     {
         $this->serverModel = new ServerModel($pdo);
+        $this->portService = new PortService($pdo);
     }
 
     public function getServersWithStatus()
@@ -18,6 +21,11 @@ class ServerService
         $servers = $this->serverModel->getAllServers();
         if (isset($servers['error'])) {
             return $servers;
+        }
+
+        foreach ($servers as &$server) {
+            $ports = $this->portService->getPortsByServer((int)$server['id']);
+            $server['ports'] = $ports;
         }
 
         return $servers;
@@ -35,14 +43,46 @@ class ServerService
             return ["error" => "Sunucu bulunamadı"];
         }
 
+        $ports = $this->portService->getPortsByServer((int)$id);
+        $server['ports'] = $ports;
+
         return $server;
     }
 
 
     public function addServer(array $data)
     {
-        return $this->serverModel->insertServer($data);
+        $result = $this->serverModel->insertServer($data);
+
+        if (isset($result['error'])) {
+            return $result;
+        }
+
+        $serverId = $result['server_id'] ?? null;
+
+        if (!empty($data['ports']) && is_array($data['ports']) && $serverId) {
+            foreach ($data['ports'] as $key => $portVal) {
+                $portData = is_array($portVal)
+                    ? $portVal
+                    : ['port_number' => $portVal];
+
+                $portData['server_id'] = $serverId;
+
+                $portInsert = $this->portService->addPorts(['ports' => [$portData], 'server_id' => $serverId]);
+
+                if (isset($portInsert['error'])) {
+                    return [
+                        "message" => "Server added, but one or more ports failed.",
+                        "server_id" => $serverId,
+                        "port_error" => $portInsert
+                    ];
+                }
+            }
+        }
+
+        return $result;
     }
+
 
     public function editServer(int $id, array $data)
     {

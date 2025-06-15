@@ -63,7 +63,12 @@ class ServerModel
                 'last_checks' => $last_checks,
             ]);
 
-            return ["message" => "Server added successfully"];
+            $serverId = $this->pdo->lastInsertId();
+
+            return [
+                "message" => "Server added successfully",
+                "server_id" => $serverId
+            ];
         } catch (PDOException $e) {
             error_log("insertServer error: " . $e->getMessage());
             http_response_code(500);

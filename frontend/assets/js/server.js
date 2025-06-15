@@ -85,13 +85,6 @@ $(document).ready(function () {
       return;
     }
 
-    const dummyPorts = [
-      { number: 80, isOpen: true },
-      { number: 443, isOpen: true },
-      { number: 22, isOpen: false },
-      { number: 8080, isOpen: false },
-    ];
-
     servers.forEach((server) => {
       const statusText = server.is_active == 1 ? "Running" : "Passive";
       const statusColor =
@@ -101,78 +94,84 @@ $(document).ready(function () {
         ? formatDate(server.last_check_at)
         : "Henüz kontrol edilmedi";
 
+      const ports = Array.isArray(server.ports)
+        ? server.ports.map((port) => ({
+            number: port.port_number,
+            isOpen: port.is_open === 1 || port.is_open === true,
+          }))
+        : [];
+
       $tbody.append(`
-      <tr class="hover:bg-slate-50 border-b border-slate-200 transition-colors">
-        <td class="p-4 py-5 text-sm font-semibold text-slate-800">${
-          server.ip
-        }</td>
-        <td class="p-4 py-5 text-sm text-slate-500">${server.name}</td>
-        <td class="p-4 py-5 text-sm text-slate-500">${server.assigned_id}</td>
-        <td class="p-4 py-5 text-sm text-slate-500">${server.location}</td>
-        <td class="p-4 py-5 text-sm font-semibold ${statusColor}">${statusText}</td>
-        <td class="p-4 py-5 text-sm text-slate-500">${lastCheck}</td>
-        <td class="p-4 py-5 text-sm">
-          <div class="flex flex-row-reverse gap-1 justify-end">
-            ${checks}
-          </div>
-        </td>
-        <td class="p-4 py-5 text-sm text-slate-600 flex gap-2 items-center">
-          <button
-            type="button"
-            title="Detayları Gör"
-            aria-label="Detayları Gör"
-            data-id="${server.id}"
-            class="inline-flex items-center justify-center size-9 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition"
-          >
-            <i class="fa fa-eye"></i>
-          </button>
+        <tr class="hover:bg-slate-50 border-b border-slate-200 transition-colors">
+          <td class="p-4 py-5 text-sm font-semibold text-slate-800">${
+            server.ip
+          }</td>
+          <td class="p-4 py-5 text-sm text-slate-500">${server.name}</td>
+          <td class="p-4 py-5 text-sm text-slate-500">${server.assigned_id}</td>
+          <td class="p-4 py-5 text-sm text-slate-500">${server.location}</td>
+          <td class="p-4 py-5 text-sm font-semibold ${statusColor}">${statusText}</td>
+          <td class="p-4 py-5 text-sm text-slate-500">${lastCheck}</td>
+          <td class="p-4 py-5 text-sm">
+            <div class="flex flex-row-reverse gap-1 justify-end">
+              ${checks}
+            </div>
+          </td>
+          <td class="p-4 py-5 text-sm text-slate-600 flex gap-2 items-center">
+            <button
+              type="button"
+              title="Detayları Gör"
+              aria-label="Detayları Gör"
+              data-id="${server.id}"
+              class="inline-flex items-center justify-center size-9 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition"
+            >
+              <i class="fa fa-eye"></i>
+            </button>
 
-          <button
-            type="button"
-            title="Düzenle"
-            aria-label="Düzenle"
-            data-id="${server.id}"
-            class="edit-btn inline-flex items-center justify-center size-9 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition"
-          >
-            <i class="fa fa-pen"></i>
-          </button>
+            <button
+              type="button"
+              title="Düzenle"
+              aria-label="Düzenle"
+              data-id="${server.id}"
+              class="edit-btn inline-flex items-center justify-center size-9 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition"
+            >
+              <i class="fa fa-pen"></i>
+            </button>
 
-          <button
-            type="button"
-            title="Sil"
-            aria-label="Sil"
-            data-id="${server.id}"
-            class="inline-flex items-center justify-center size-9 rounded-full bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition delete-btn"
-          >
-            <i class="fas fa-trash-alt text-base"></i>
-          </button>
-        </td>
-      </tr>
+            <button
+              type="button"
+              title="Sil"
+              aria-label="Sil"
+              data-id="${server.id}"
+              class="inline-flex items-center justify-center size-9 rounded-full bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition delete-btn"
+            >
+              <i class="fas fa-trash-alt text-base"></i>
+            </button>
+          </td>
+        </tr>
 
-      <!-- PORT DURUMLARINI GÖSTEREN ALT SATIR -->
-      <tr class="bg-gray-50 border-b border-gray-200">
-        <td colspan="8" class="p-3">
-          <div class="flex flex-wrap gap-2 items-center">
-            ${dummyPorts
-              .map(
-                (port) => `
-              <div class="flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow-sm border ${
-                port.isOpen
-                  ? "border-green-400 bg-green-50 text-green-700"
-                  : "border-red-400 bg-red-50 text-red-700"
-              }">
-                <span class="font-semibold">${port.number}</span>
-                <span class="w-3 h-3 rounded-full ${
-                  port.isOpen ? "bg-green-500" : "bg-red-500"
-                }"></span>
-              </div>
-            `
-              )
-              .join("")}
-          </div>
-        </td>
-      </tr>
-`);
+        <tr class="bg-gray-50 border-b border-gray-200">
+          <td colspan="8" class="p-3">
+            <div class="flex flex-wrap gap-2 items-center">
+              ${ports
+                .map(
+                  (port) => `
+                <div class="flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow-sm border ${
+                  port.isOpen
+                    ? "border-green-400 bg-green-50 text-green-700"
+                    : "border-red-400 bg-red-50 text-red-700"
+                }">
+                  <span class="font-semibold">${port.number}</span>
+                  <span class="w-3 h-3 rounded-full ${
+                    port.isOpen ? "bg-green-500" : "bg-red-500"
+                  }"></span>
+                </div>
+              `
+                )
+                .join("")}
+            </div>
+          </td>
+        </tr>
+      `);
     });
   }
 
@@ -254,11 +253,18 @@ $(document).ready(function () {
     $addForm.on("submit", function (e) {
       e.preventDefault();
 
+      const selectedPorts = $("input[name='ports[]']:checked")
+        .map(function () {
+          return parseInt($(this).val(), 10);
+        })
+        .get();
+
       const formData = {
         ip: $("#ip").val().trim(),
         name: $("#name").val().trim(),
         assigned_id: $("#assigned_id").val().trim(),
         location: $("#location").val().trim(),
+        ports: selectedPorts,
       };
 
       $successMsg.addClass("hidden");
@@ -311,17 +317,32 @@ $(document).ready(function () {
         dataType: "json",
         success: function (res) {
           const server = res.server;
+
           $("#ip").val(server.ip);
           $("#name").val(server.name);
           $("#assigned_id").val(server.assigned_id);
           $("#location").val(server.location);
 
+          const activePorts = Array.isArray(server.ports)
+            ? server.ports.map((p) => String(p.port_number))
+            : [];
+
+          $(".port-checkbox").each(function () {
+            const portVal = $(this).val();
+            if (activePorts.includes(portVal)) {
+              $(this).prop("checked", true);
+            } else {
+              $(this).prop("checked", false);
+            }
+          });
+          
+
           $loading.addClass("hidden");
           $editFormContainer.removeClass("hidden");
         },
         error: function (xhr) {
-          $loading.remove(); // Loading divini tamamen kaldır
-          $editFormWrapper.append($errorMsg); // Hata mesajını göster
+          $loading.remove();
+          $editFormWrapper.append($errorMsg);
         },
       });
     }

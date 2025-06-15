@@ -1,5 +1,7 @@
 - Localization
 - Mobile Version
+- NOTIFICATION
 - manual control for one specific server in details page
 - advanced log mechanism
 - making this as service with .conf file
+- port eklenince server mevcut mu kontrolu

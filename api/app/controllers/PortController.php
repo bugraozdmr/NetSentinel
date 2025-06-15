@@ -93,15 +93,40 @@ class PortController
     }
 
 
-    public function deletePort($id)
+    public function deletePort()
     {
-        if (empty($id) || !is_numeric($id)) {
+        $input = json_decode(file_get_contents('php://input'), true);
+
+        if (!$input) {
             http_response_code(400);
-            echo json_encode(["error" => "Invalid Id."]);
+            echo json_encode(["error" => "Invalid input."]);
             return;
         }
 
-        $result = $this->portService->removePort((int) $id);
+        $portIds = [];
+
+        if (isset($input['id'])) {
+            $portIds = [$input['id']];
+        } elseif (isset($input['ports'])) {
+            $portIds = $input['ports'];
+        } else {
+            http_response_code(400);
+            echo json_encode(["error" => "No port id(s) provided."]);
+            return;
+        }
+
+        if (!is_array($portIds)) {
+            $portIds = [$portIds];
+        }
+        foreach ($portIds as $portId) {
+            if (!is_numeric($portId)) {
+                http_response_code(400);
+                echo json_encode(["error" => "Invalid port id(s)."]);
+                return;
+            }
+        }
+
+        $result = $this->portService->removePorts($portIds);
 
         if (isset($result['error'])) {
             http_response_code(500);

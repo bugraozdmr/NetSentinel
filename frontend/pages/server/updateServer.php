@@ -1,5 +1,7 @@
+<?php
+$ports = [1, 22, 23, 25, 110, 143, 1433, 6379, 27017, 123, 53, 80, 443, 3389, 3306];
+?>
 <div id="editFormWrapper" data-server-id="<?= htmlspecialchars($id ?? '') ?>">
-
   <div id="loading" class="max-w-xl mx-auto mt-16 px-6 py-10 bg-white rounded-2xl shadow-xl border border-gray-200 text-center text-gray-600 font-semibold text-xl">
     Yükleniyor...
   </div>
@@ -56,6 +58,25 @@
           required
           class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
       </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-800 mb-3">Port Seçimi</label>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <?php foreach ($ports as $port): ?>
+            <label class="group cursor-pointer transition-transform transform hover:scale-[1.02]">
+              <div class="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-300 bg-gray-50 group-hover:bg-blue-50 shadow-sm transition-all duration-200">
+                <input
+                  type="checkbox"
+                  name="ports[]"
+                  value="<?= $port ?>"
+                  class="port-checkbox accent-blue-600 h-4 w-4 rounded border-gray-300" />
+                <span class="text-sm font-medium text-gray-700"><?= $port ?></span>
+              </div>
+            </label>
+          <?php endforeach; ?>
+        </div>
+      </div>
+
 
       <button
         type="submit"
