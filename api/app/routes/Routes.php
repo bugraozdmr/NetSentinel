@@ -20,6 +20,9 @@ return [
     "PUT" => [
         // Servers
         "servers/edit" => "ServerController@editServer",
+
+        // Ports
+        "ports/edit" => "PortController@editPortStatus"
     ],
     "DELETE" => [
         // Servers

@@ -136,4 +136,45 @@ class PortController
 
         echo json_encode($result);
     }
+
+    public function editPortStatus()
+    {
+        $input = json_decode(file_get_contents('php://input'), true);
+
+        if (!$input) {
+            http_response_code(400);
+            echo json_encode(["error" => "Invalid input."]);
+            return;
+        }
+
+        if (!isset($input['portId']) || !isset($input['is_open'])) {
+            http_response_code(400);
+            echo json_encode(["error" => "Missing portId or is_open in input."]);
+            return;
+        }
+
+        $portId = $input['portId'];
+        $isOpen = $input['is_open'];
+
+        if (!is_numeric($portId) || !in_array($isOpen, [0, 1], true)) {
+            http_response_code(400);
+            echo json_encode(["error" => "Invalid portId or is_open value."]);
+            return;
+        }
+
+        try {
+            $result = $this->portService->updatePortStatus((int)$portId, (int)$isOpen);
+
+            if (isset($result['error'])) {
+                http_response_code(500);
+                echo json_encode($result);
+                return;
+            }
+
+            echo json_encode($result);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["error" => "Unexpected error: " . $e->getMessage()]);
+        }
+    }
 }

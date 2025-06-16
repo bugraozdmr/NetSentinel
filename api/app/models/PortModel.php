@@ -144,4 +144,40 @@ class PortModel
             return ["error" => "Database error: Unable to fetch ports"];
         }
     }
+
+    public function getPortById(int $portId)
+    {
+        try {
+            $stmt = $this->pdo->prepare("SELECT * FROM server_ports WHERE id = :id");
+            $stmt->execute(['id' => $portId]);
+            $port = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return $port ?: null;
+        } catch (PDOException $e) {
+            error_log("getPortById error: " . $e->getMessage());
+            return null;
+        }
+    }
+
+
+    public function updatePortStatus(int $portId, int $isOpen)
+    {
+        try {
+            $stmt = $this->pdo->prepare("UPDATE server_ports SET is_open = :is_open WHERE id = :id");
+            $stmt->execute([
+                ':is_open' => $isOpen,
+                ':id' => $portId
+            ]);
+
+            return ["message" => "Port status updated successfully"];
+        } catch (PDOException $e) {
+            error_log("updatePortStatus error: " . $e->getMessage());
+            http_response_code(500);
+            return ["error" => "Database error: " . $e->getMessage()];
+        } catch (Exception $e) {
+            error_log("updatePortStatus error: " . $e->getMessage());
+            http_response_code(500);
+            return ["error" => "Unexpected error: " . $e->getMessage()];
+        }
+    }
 }

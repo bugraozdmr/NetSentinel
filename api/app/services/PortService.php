@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../models/PortModel.php';
-// require_once __DIR__ . '/../utils/config.php';
+require_once __DIR__ . '/../utils/config.php';
 
 class PortService
 {
@@ -64,5 +64,32 @@ class PortService
         }
 
         return $ports;
+    }
+
+    public function getPortById(int $portId)
+    {
+        return $this->portModel->getPortById($portId);
+    }
+
+    public function updatePortStatus(int $portId, int $isOpen)
+    {
+        try {
+            $port = $this->portModel->getPortById($portId);
+            if (!$port) {
+                http_response_code(404);
+                return ["error" => "Port not found with ID: $portId"];
+            }
+
+            $this->portModel->updatePortStatus($portId, $isOpen);
+            return ["message" => "Port status updated successfully"];
+        } catch (PDOException $e) {
+            error_log("updatePortStatus error: " . $e->getMessage());
+            http_response_code(500);
+            return ["error" => "Database error: " . $e->getMessage()];
+        } catch (Exception $e) {
+            error_log("updatePortStatus error: " . $e->getMessage());
+            http_response_code(500);
+            return ["error" => "Unexpected error: " . $e->getMessage()];
+        }
     }
 }

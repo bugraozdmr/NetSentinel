@@ -80,7 +80,6 @@ class ServerController
     }
 
 
-
     public function deleteServer($serverId)
     {
         if (!$serverId) {

@@ -145,14 +145,18 @@ class ServerService
     }
 
 
+    //* STATUS CHECKER
     public function checkAllStatuses()
     {
-        $servers = $this->serverModel->getAllServersForStatus();
+        $servers = $this->getServersWithStatus();
 
         $processes = [];
         $pipesList = [];
 
         $pingScript = realpath(__DIR__ . '/../utils/ping.php');
+
+        $activeServers = [];
+        $inactiveServers = [];
 
         foreach ($servers as $index => $server) {
             $pipes = [];
@@ -193,7 +197,6 @@ class ServerService
 
             $server = $servers[$index];
             $id = $server['id'];
-
             $location = $server['location'];
 
             $lastChecks = json_decode($server['last_checks'], true);
@@ -202,7 +205,6 @@ class ServerService
             }
 
             $currentTime = date('Y-m-d H:i:s');
-
             $lastChecks[] = [
                 'time' => $currentTime,
                 'status' => $status
@@ -213,6 +215,76 @@ class ServerService
             }
 
             $this->serverModel->updateStatus($id, $status, json_encode($lastChecks), $location);
+
+            if ($status === 1) {
+                $activeServers[] = $server;
+            } else {
+                $inactiveServers[] = $server;
+            }
+        }
+
+        $this->scanPorts($activeServers);
+        $this->markPortsClosed($inactiveServers); // <-- Yeni fonksiyon
+    }
+
+
+    // Port tarama fonksiyonu
+    public function scanPorts(array $activeServers)
+    {
+        $processes = [];
+        $pipesList = [];
+
+        $portScanScript = realpath(__DIR__ . '/../utils/portScan.php');
+
+        foreach ($activeServers as $server) {
+            foreach ($server['ports'] as $port) {
+                $cmd = escapeshellcmd(Config::getPhpPath()) . ' ' . escapeshellarg($portScanScript) . ' ' . escapeshellarg($server['ip']) . ' ' . escapeshellarg($port['port_number']);
+
+                $pipes = [];
+                $proc = proc_open(
+                    $cmd,
+                    [
+                        1 => ['pipe', 'w'],
+                        2 => ['pipe', 'w']
+                    ],
+                    $pipes
+                );
+
+                if (is_resource($proc)) {
+                    $processes[$port['id']] = $proc;
+                    $pipesList[$port['id']] = $pipes;
+                }
+            }
+        }
+
+        foreach ($processes as $portId => $proc) {
+            $pipes = $pipesList[$portId];
+
+            $output = stream_get_contents($pipes[1]);
+            $errorOutput = stream_get_contents($pipes[2]);
+
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+
+            proc_close($proc);
+
+            $isOpen = (trim($output) === 'open') ? 1 : 0;
+
+            if ($errorOutput) {
+                error_log("Port scan error on port $portId: $errorOutput");
+            }
+
+            $this->portService->updatePortStatus($portId, $isOpen);
+        }
+    }
+
+    public function markPortsClosed(array $inactiveServers)
+    {
+        foreach ($inactiveServers as $server) {
+            foreach ($server['ports'] as $port) {
+                $portId = $port['id'];
+                $this->portService->updatePortStatus($portId, 0);
+            }
         }
     }
 }
