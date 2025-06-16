@@ -40,6 +40,15 @@
 
     <div>
         <h2 class="text-xl font-semibold text-slate-800 mb-3">Port Durumu</h2>
-        <div id="ports" class="grid grid-cols-2 sm:grid-cols-4 gap-4"></div>
+        <div id="ports" class="grid grid-cols-2 sm:grid-cols-4 gap-4 justify-items-center"></div>
     </div>
+
+    <div class="mb-8 mt-4">
+        <h2 class="text-xl font-semibold text-slate-800 mb-3">Ping Süreleri (ms)</h2>
+        <div id="chartContainer" style="max-width: 600px; max-height: 300px; margin:auto;">
+            <canvas id="pingChart"></canvas>
+        </div>
+    </div>
+
+
 </div>

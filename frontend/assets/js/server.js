@@ -122,7 +122,7 @@ $(document).ready(function () {
               title="Detayları Gör"
               aria-label="Detayları Gör"
               data-id="${server.id}"
-              class="inline-flex items-center justify-center size-9 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition"
+              class="detail-btn inline-flex items-center justify-center size-9 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition"
             >
               <i class="fa fa-eye"></i>
             </button>
@@ -380,7 +380,9 @@ $(document).ready(function () {
   });
 
   // DETAILS
-  $(document).on("click", "button[data-id]", function () {
+  let pingChart = null;
+
+  $(document).on("click", ".detail-btn", function () {
     const serverId = $(this).data("id");
     if (serverId) {
       window.location.href = `/${APP_NAME}/server/detail/${serverId}`;
@@ -396,7 +398,6 @@ $(document).ready(function () {
       return;
     }
 
-    // API'den veriyi çek
     $.get(`${API_BASE_URL}/server/${serverId}`, function (data) {
       const server = data.server;
 
@@ -416,33 +417,129 @@ $(document).ready(function () {
         );
       }
 
-      // Son kontroller
       const checks = JSON.parse(server.last_checks || "[]");
       const $checkList = $("#checkList").empty();
 
+      const labels = [];
+      const msValues = [];
+
       checks.forEach((check) => {
-        const color = check.status === 1 ? "bg-green-500" : "bg-red-500";
-        const label = check.status === 1 ? "✓" : "✗";
+        const isActive = check.status === 1;
+        const colorBg = isActive ? "bg-green-500" : "bg-red-500";
+        const colorBgDark = isActive ? "dark:bg-green-600" : "dark:bg-red-600";
+        const icon = isActive ? "✓" : "✗";
+
+        const formattedTime = check.time.replace("T", " ").substring(0, 19);
+
         const div = $(`
-          <div class="${color} text-white text-sm px-3 py-1 rounded-full">${label} ${check.time}</div>
-        `);
+    <div class="flex-1 flex items-center space-x-3 bg-gray-50 dark:bg-gray-900 rounded-lg px-4 py-2 shadow-md hover:shadow-lg transition-shadow duration-200 cursor-default mx-1">
+      <span class="flex items-center justify-center w-8 h-8 rounded-full text-white ${colorBg} ${colorBgDark} font-semibold text-lg select-none">
+        ${icon}
+      </span>
+      <span class="text-gray-900 dark:text-gray-100 font-semibold text-sm tracking-wide leading-tight">
+        ${formattedTime}
+      </span>
+    </div>
+  `);
         $checkList.append(div);
+
+        labels.push(check.time.substr(11, 5));
+        msValues.push(check.avg_ms !== null ? parseFloat(check.avg_ms) : null);
       });
 
-      // Portlar
+      if (pingChart) {
+        pingChart.destroy();
+      }
+
+      const ctx = document.getElementById("pingChart").getContext("2d");
+      pingChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: "Ping Süresi (ms)",
+              data: msValues,
+              borderColor: "rgba(37, 99, 235, 1)",
+              backgroundColor: "rgba(37, 99, 235, 0.2)",
+              spanGaps: true,
+              tension: 0.3,
+              pointRadius: 3,
+              pointHoverRadius: 6,
+              pointBackgroundColor: "rgba(37, 99, 235, 1)",
+              fill: true,
+              borderWidth: 2,
+            },
+          ],
+        },
+        options: {
+          maintainAspectRatio: false,
+          layout: {
+            padding: 10,
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: "ms",
+                font: { size: 12 },
+              },
+              ticks: {
+                font: { size: 11 },
+                stepSize: 10,
+              },
+            },
+            x: {
+              title: {
+                display: true,
+                text: "Zaman",
+                font: { size: 12 },
+              },
+              ticks: {
+                font: { size: 11 },
+              },
+            },
+          },
+          plugins: {
+            legend: {
+              display: true,
+              labels: {
+                font: {
+                  size: 13,
+                  weight: "600",
+                },
+              },
+            },
+            tooltip: {
+              enabled: true,
+              mode: "nearest",
+              intersect: false,
+              backgroundColor: "rgba(37, 99, 235, 0.8)",
+              titleFont: { size: 13 },
+              bodyFont: { size: 12 },
+              padding: 8,
+            },
+          },
+          responsive: true,
+        },
+      });
+
       const $ports = $("#ports").empty();
+
       server.ports.forEach((port) => {
         const isOpen = port.is_open == 1;
-        const color = isOpen
-          ? "bg-green-100 text-green-800"
-          : "bg-red-100 text-red-800";
-        const statusText = isOpen ? "Açık" : "Kapalı";
+        const bgColor = isOpen ? "bg-green-50" : "bg-red-50";
+        const textColor = isOpen ? "text-green-800" : "text-red-800";
+        const statusBg = isOpen ? "bg-green-500" : "bg-red-500";
 
         const portDiv = $(`
-          <div class="${color} text-center p-3 rounded-xl font-semibold">
-            ${port.port_number}<br>${statusText}
-          </div>
-        `);
+    <div class="${bgColor} ${textColor} flex items-center justify-between p-4 rounded-xl shadow-md font-semibold cursor-default hover:shadow-lg transition-shadow duration-200 w-full max-w-[140px]">
+      <span class="text-lg md:text-xl font-bold select-none mr-2">${port.port_number}</span>
+      <span class="${statusBg} w-5 h-5 rounded-full select-none"></span>
+    </div>
+  `);
+
         $ports.append(portDiv);
       });
 

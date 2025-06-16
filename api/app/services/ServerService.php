@@ -193,11 +193,19 @@ class ServerService
                 file_put_contents(__DIR__ . '/../../ping_errors.log', "Server #{$index}: $errorOutput\n", FILE_APPEND);
             }
 
-            $status = (trim($output) === '1') ? 1 : 0;
-
             $server = $servers[$index];
             $id = $server['id'];
             $location = $server['location'];
+
+            $pingResult = json_decode(trim($output), true);
+            
+            $status = 0;
+            $avgMs = null;
+
+            if (is_array($pingResult)) {
+                $status = isset($pingResult['status']) ? (int)$pingResult['status'] : 0;
+                $avgMs = isset($pingResult['avg_ms']) ? $pingResult['avg_ms'] : null;
+            }
 
             $lastChecks = json_decode($server['last_checks'], true);
             if (!is_array($lastChecks)) {
@@ -205,9 +213,11 @@ class ServerService
             }
 
             $currentTime = date('Y-m-d H:i:s');
+
             $lastChecks[] = [
                 'time' => $currentTime,
-                'status' => $status
+                'status' => $status,
+                'avg_ms' => $avgMs !== null ? number_format($avgMs, 2, '.', '') : null
             ];
 
             if (count($lastChecks) > 10) {
@@ -224,8 +234,9 @@ class ServerService
         }
 
         $this->scanPorts($activeServers);
-        $this->markPortsClosed($inactiveServers); // <-- Yeni fonksiyon
+        $this->markPortsClosed($inactiveServers);
     }
+
 
 
     // Port tarama fonksiyonu
