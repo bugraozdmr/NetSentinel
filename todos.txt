@@ -1,8 +1,10 @@
 - Localization
 - Mobile Version
 - NOTIFICATION
+- CRON JOB
 - manual control for one specific server in details page
 - advanced log mechanism
+- Authentication ( JWT )
 - making this as service with .conf file
 - port eklenince server mevcut mu kontrolu
 - düzenlencek http://192.168.253.5/netsentinel/api .htaccess

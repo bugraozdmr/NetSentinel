@@ -379,5 +379,79 @@ $(document).ready(function () {
     });
   });
 
+  // DETAILS
+  $(document).on("click", "button[data-id]", function () {
+    const serverId = $(this).data("id");
+    if (serverId) {
+      window.location.href = `/${APP_NAME}/server/detail/${serverId}`;
+    }
+  });
+
+  $(document).ready(function () {
+    const pathParts = window.location.pathname.split("/");
+    const serverId = pathParts[pathParts.length - 1];
+
+    if (!serverId || isNaN(serverId)) {
+      $("#loading").text("Geçersiz sunucu ID.");
+      return;
+    }
+
+    // API'den veriyi çek
+    $.get(`${API_BASE_URL}/server/${serverId}`, function (data) {
+      const server = data.server;
+
+      $("#name").text(server.name);
+      $("#ip").text(server.ip);
+      $("#location").text(server.location);
+      $("#assigned_id").text(server.assigned_id);
+      $("#last_check_at").text(server.last_check_at);
+
+      if (server.is_active == 1) {
+        $("#is_active").html(
+          '<span class="inline-block px-3 py-1 rounded-full text-white text-sm font-semibold bg-green-500">Aktif</span>'
+        );
+      } else {
+        $("#is_active").html(
+          '<span class="inline-block px-3 py-1 rounded-full text-white text-sm font-semibold bg-red-500">Pasif</span>'
+        );
+      }
+
+      // Son kontroller
+      const checks = JSON.parse(server.last_checks || "[]");
+      const $checkList = $("#checkList").empty();
+
+      checks.forEach((check) => {
+        const color = check.status === 1 ? "bg-green-500" : "bg-red-500";
+        const label = check.status === 1 ? "✓" : "✗";
+        const div = $(`
+          <div class="${color} text-white text-sm px-3 py-1 rounded-full">${label} ${check.time}</div>
+        `);
+        $checkList.append(div);
+      });
+
+      // Portlar
+      const $ports = $("#ports").empty();
+      server.ports.forEach((port) => {
+        const isOpen = port.is_open == 1;
+        const color = isOpen
+          ? "bg-green-100 text-green-800"
+          : "bg-red-100 text-red-800";
+        const statusText = isOpen ? "Açık" : "Kapalı";
+
+        const portDiv = $(`
+          <div class="${color} text-center p-3 rounded-xl font-semibold">
+            ${port.port_number}<br>${statusText}
+          </div>
+        `);
+        $ports.append(portDiv);
+      });
+
+      $("#loading").hide();
+      $("#serverDetail").removeClass("hidden");
+    }).fail(function () {
+      $("#loading").text("Veri yüklenemedi.");
+    });
+  });
+
   fetchServers();
 });
