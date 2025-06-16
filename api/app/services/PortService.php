@@ -37,6 +37,16 @@ class PortService
         return $this->portModel->deletePorts(['ports' => $portIds]);
     }
 
+    /**
+     * Delete Ports
+     * $portId: int
+     * $ports: Array
+     */
+    public function deletePortByServerAndNumber(int $serverId, array $ports)
+    {
+        return $this->portModel->deletePortsByServerId(['serverId' => $serverId, 'ports' => $ports]);
+    }
+
 
     /**
      * List ports based on server_id

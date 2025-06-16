@@ -293,7 +293,7 @@ $(document).ready(function () {
     if (!target) return;
 
     const id = target.getAttribute("data-id");
-    console.log(id);
+
     window.location.href = `/${APP_NAME}/server/updateServer/${id}`;
   });
 
@@ -335,7 +335,6 @@ $(document).ready(function () {
               $(this).prop("checked", false);
             }
           });
-          
 
           $loading.addClass("hidden");
           $editFormContainer.removeClass("hidden");
@@ -358,6 +357,11 @@ $(document).ready(function () {
       name: $("#name").val().trim(),
       assigned_id: $("#assigned_id").val().trim(),
       location: $("#location").val().trim(),
+      ports: $("input[name='ports[]']:checked")
+        .map(function () {
+          return parseInt($(this).val(), 10);
+        })
+        .get(),
     };
 
     $.ajax({

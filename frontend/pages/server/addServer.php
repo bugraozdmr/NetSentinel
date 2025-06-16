@@ -1,5 +1,5 @@
 <?php
-$ports = [1, 22, 23, 25, 110, 143, 1433, 6379, 27017, 123, 53, 80, 443, 3389, 3306];
+include __DIR__ . '/../../config/ports.php';
 ?>
 
 <div class="max-w-xl mx-auto mt-16 px-6 sm:px-8 py-10 bg-white rounded-2xl shadow-xl border border-gray-200 transition-all">
@@ -12,7 +12,6 @@ $ports = [1, 22, 23, 25, 110, 143, 1433, 6379, 27017, 123, 53, 80, 443, 3389, 33
     </div>
 
     <div id="errorMsg" class="hidden mb-6 px-4 py-3 rounded-md text-sm font-medium bg-red-100 text-red-800 border border-red-300">
-        <!-- Hata mesajı buraya yazılacak -->
     </div>
 
 

@@ -1,5 +1,5 @@
 <?php
-$ports = [1, 22, 23, 25, 110, 143, 1433, 6379, 27017, 123, 53, 80, 443, 3389, 3306];
+include __DIR__ . '/../../config/ports.php';
 ?>
 <div id="editFormWrapper" data-server-id="<?= htmlspecialchars($id ?? '') ?>">
   <div id="loading" class="max-w-xl mx-auto mt-16 px-6 py-10 bg-white rounded-2xl shadow-xl border border-gray-200 text-center text-gray-600 font-semibold text-xl">

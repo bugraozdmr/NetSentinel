@@ -73,6 +73,9 @@ class ServerController
 
         $response = $this->serverService->editServer((int)$id, $data);
 
+        if (isset($response['error'])) {
+            http_response_code(400);
+        }
         echo json_encode($response);
     }
 

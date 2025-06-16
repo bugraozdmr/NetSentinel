@@ -94,10 +94,11 @@ class ServerModel
                 'id' => $id,
             ]);
 
+            /*
             if ($stmt->rowCount() === 0) {
                 // return ["error" => "No server found with the provided ID or data is the same."];
-                return ["error" => "Something went wrong !"];
             }
+            */
 
             return ["message" => "Server updated successfully"];
         } catch (PDOException $e) {

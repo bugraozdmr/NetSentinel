@@ -86,8 +86,57 @@ class ServerService
 
     public function editServer(int $id, array $data)
     {
-        return $this->serverModel->updateServer($id, $data);
+        $cs = $this->getServerByIdWithStatus($id);
+
+        if (isset($cs['error'])) {
+            return $cs;
+        }
+
+        $updateResult = $this->serverModel->updateServer($id, $data);
+
+        // Başarısız güncelleme varsa direk dön
+        if (isset($updateResult['error'])) {
+            return $updateResult;
+        }
+
+        $portResults = [];
+
+        if (isset($data['ports']) && is_array($data['ports'])) {
+            $existingPorts = $this->portService->getPortsByServer($id);
+            $existingPortNumbers = array_map(fn($p) => (int)$p['port_number'], $existingPorts);
+            $newPorts = array_map('intval', $data['ports']);
+
+            $removedPorts = array_diff($existingPortNumbers, $newPorts);
+            $addedPorts = array_diff($newPorts, $existingPortNumbers);
+
+            if (!empty($addedPorts)) {
+                $addResult = $this->portService->addPorts([
+                    'server_id' => $id,
+                    'ports' => array_values($addedPorts)
+                ]);
+
+                if (isset($addResult['error'])) {
+                    $portResults['add_error'] = $addResult['error'];
+                } else {
+                    $portResults['added_ports'] = array_values($addedPorts);
+                }
+            }
+
+            if (!empty($removedPorts)) {
+                $deleteResult = $this->portService->deletePortByServerAndNumber($id, array_values($removedPorts));
+
+                if (isset($deleteResult['error'])) {
+                    $portResults['delete_error'] = $deleteResult['error'];
+                } else {
+                    $portResults['removed_ports'] = array_values($removedPorts);
+                }
+            }
+        }
+
+        return array_merge($updateResult, $portResults);
     }
+
+
 
 
     public function deleteServer($serverId)
