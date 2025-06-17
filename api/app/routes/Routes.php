@@ -8,7 +8,11 @@ return [
         "check" => "ServerController@checkAll",
 
         // Ports
-        "ports" => "PortController@getPorts"
+        "ports" => "PortController@getPorts",
+
+        // Notifications
+        "notifications" => "NotificationController@getNotifications",
+        "notifications/server" => "NotificationController@getNotificationsByServerId",
     ],
     "POST" => [
         // Servers
@@ -16,6 +20,9 @@ return [
 
         // Ports
         "ports" => "PortController@addPort",
+
+        // Notifications
+        "notifications" => "NotificationController@addNotification",
     ],
     "PUT" => [
         // Servers
@@ -30,5 +37,8 @@ return [
 
         // Ports
         "ports/delete" => "PortController@deletePort",
+
+        // Notifications
+        "notifications" => "NotificationController@deleteNotification",
     ]
 ];

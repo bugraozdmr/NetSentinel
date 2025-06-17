@@ -1,10 +1,19 @@
 - Localization
 - Mobile Version
 - NOTIFICATION
-- CRON JOB
+- CRON JOB (+)
+- Settings table and interval adjustment
 - manual control for one specific server in details page
+- SCAN server status and ports METHODS needs to change a bit more professional
 - advanced log mechanism
 - Authentication ( JWT )
 - making this as service with .conf file
 - port eklenince server mevcut mu kontrolu
 - düzenlencek http://192.168.253.5/netsentinel/api .htaccess
+
+-- HATA MEKANIZMASI DÜZENLENCEK GENEL
+{
+"notifications": {
+"error": "Database error: "
+}
+}

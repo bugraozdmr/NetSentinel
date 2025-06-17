@@ -2,11 +2,11 @@
     <div class="max-w-3xl mx-auto text-center">
         <h2 class="text-lg sm:text-xl font-bold text-white"><?= $appName; ?></h2>
         <p class="text-sm text-gray-400 mt-1">
-            Made <span class="font-semibold text-white">with </span> ❤️
+            Made by <span class="font-semibold text-white">Buğra</span>
         </p>
 
         <div class="mt-3 text-xs text-gray-500 flex items-center justify-center gap-2 flex-wrap">
-            <span>&copy; <?= date('Y') ?> Buğra Özdemir</span>
+            <span>&copy; <?= date('Y') ?> <?= $appName; ?></span>
             <a href="https://github.com/bugraozdmr" target="_blank" class="inline-flex items-center gap-1 text-gray-400 hover:text-white transition underline underline-offset-2">
                 <i class="fab fa-github text-base"></i>
                 Github
