@@ -61,4 +61,27 @@ class NotificationController
 
         echo json_encode($this->notificationService->removeNotification($id));
     }
+
+    public function notificationCountAction($serverId)
+    {
+        if (!empty($serverId) && !ctype_digit($serverId) && ($serverId != 'all')) {
+            http_response_code(400);
+            echo json_encode(["error" => "Invalid server ID"]);
+            return;
+        }
+
+        if ($serverId == 'all') {
+            $serverId = null;
+        }
+
+        $count = $this->notificationService->getNotificationCount($serverId);
+
+        echo json_encode(['unread_count' => $count]);
+    }
+
+    public function markAsReadAll()
+    {
+        $result = $this->notificationService->markAsReadAll();
+        echo json_encode($result);
+    }
 }

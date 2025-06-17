@@ -59,6 +59,17 @@
         <canvas id="pingChart" style="max-height: 300px;"></canvas>
     </div>
 
+    <div id="notifications" class="bg-slate-50 p-4 rounded-2xl shadow-inner border border-slate-200 max-w-5xl mx-auto mt-10 hidden">
+        <h2 class="text-xl font-semibold text-slate-800 mb-3">Bildirimler</h2>
+        <div id="notifications-loading" class="text-center text-lg font-semibold text-slate-600 py-6 animate-pulse">
+            <svg class="mx-auto mb-2 w-6 h-6 animate-spin text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            Yükleniyor...
+        </div>
+        <ul id="notifications-list" class="space-y-3"></ul>
+    </div>
 
 
 </div>

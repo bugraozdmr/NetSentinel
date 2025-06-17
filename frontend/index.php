@@ -25,7 +25,7 @@ $route = implode('/', $segments);
 
 $route = $route === '' ? 'home' : $route;
 
-$allowedPages = ['home', 'server/addServer', 'server/updateServer', 'server/detail'];
+$allowedPages = ['home', 'server/addServer', 'server/updateServer', 'server/detail', 'notifications'];
 $contentFile = __DIR__ . "/pages/{$route}.php";
 
 if ($route === 'server/updateServer' && $id === null) {
@@ -39,6 +39,13 @@ if ($route !== 'home' && (!in_array($route, $allowedPages) || !file_exists($cont
     $route = '404';
     $contentFile = __DIR__ . "/pages/404.php";
 }
+
+if (preg_match('#^/netsentinel/assets/#', $requestUri)) {
+    header('HTTP/1.1 403 Forbidden');
+    include __DIR__ . '/pages/403.php';
+    exit;
+}
+
 
 $GLOBALS['id'] = $id;
 

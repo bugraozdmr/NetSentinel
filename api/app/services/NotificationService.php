@@ -30,4 +30,14 @@ class NotificationService
     {
         return $this->notificationModel->deleteNotification($notificationId);
     }
+
+    public function getNotificationCount(int $serverId = null)
+    {
+        return $this->notificationModel->getNotificationCount($serverId);
+    }
+
+    public function markAsReadAll()
+    {
+        return $this->notificationModel->markAllAsRead();
+    }
 }

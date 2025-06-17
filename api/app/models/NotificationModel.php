@@ -55,8 +55,6 @@ class NotificationModel
         }
     }
 
-
-
     public function insertNotification($data)
     {
         try {
@@ -115,6 +113,66 @@ class NotificationModel
             return ["error" => "Database error: Something went wrong -- " . $e->getMessage()];
         } catch (Exception $e) {
             error_log("deleteNotification error: " . $e->getMessage());
+            http_response_code(400);
+            return ["error" => $e->getMessage()];
+        }
+    }
+
+    public function getNotificationCount(int $serverId = null): int
+    {
+        $query = "SELECT COUNT(*) as count FROM notifications WHERE status = 'unread'";
+        $params = [];
+
+        if ($serverId !== null) {
+            $query .= " AND server_id = :serverId";
+            $params[':serverId'] = $serverId;
+        }
+
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute($params);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return (int)($result['count'] ?? 0);
+    }
+
+    public function markAllAsRead()
+    {
+        try {
+            $stmt = $this->pdo->prepare("UPDATE notifications SET status = 'read' WHERE status = 'unread'");
+            $stmt->execute();
+
+            return [
+                "success" => true,
+                "message" => "All notifications marked as read",
+                "updatedCount" => $stmt->rowCount()
+            ];
+        } catch (PDOException $e) {
+            error_log("markAllAsRead error: " . $e->getMessage());
+            http_response_code(500);
+            return ["error" => "db error: " . $e->getMessage()];
+        }
+    }
+
+    // mark as read for serverId
+    public function markAllAsReadByServerId($serverId)
+    {
+        try {
+            if (!is_numeric($serverId)) {
+                throw new Exception("Invalid ID");
+            }
+
+            $stmt = $this->pdo->prepare("UPDATE notifications SET status = 'read' WHERE status = 'unread' AND server_id = :server_id");
+            $stmt->execute(['server_id' => $serverId]);
+
+            return [
+                "message" => "Server notifications marked as read",
+                "updatedCount" => $stmt->rowCount()
+            ];
+        } catch (PDOException $e) {
+            error_log("markAllAsReadByServerId error: " . $e->getMessage());
+            http_response_code(500);
+            return ["error" => "db error: " . $e->getMessage()];
+        } catch (Exception $e) {
             http_response_code(400);
             return ["error" => $e->getMessage()];
         }

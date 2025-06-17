@@ -1,7 +1,9 @@
 <?php
 require_once __DIR__ . '/../models/ServerModel.php';
 require_once __DIR__ . '/PortService.php';
+require_once __DIR__ . '/NotificationService.php';
 require_once __DIR__ . '/../utils/config.php';
+require_once __DIR__ . '/../data/messages.php';
 
 Config::load();
 
@@ -9,11 +11,13 @@ class ServerService
 {
     private $serverModel;
     private $portService;
+    private $notificationService;
 
     public function __construct($pdo)
     {
         $this->serverModel = new ServerModel($pdo);
         $this->portService = new PortService($pdo);
+        $this->notificationService = new NotificationService($pdo);
     }
 
     public function getServersWithStatus()
@@ -137,8 +141,6 @@ class ServerService
     }
 
 
-
-
     public function deleteServer($serverId)
     {
         return $this->serverModel->deleteServer($serverId);
@@ -198,7 +200,7 @@ class ServerService
             $location = $server['location'];
 
             $pingResult = json_decode(trim($output), true);
-            
+
             $status = 0;
             $avgMs = null;
 
@@ -210,6 +212,30 @@ class ServerService
             $lastChecks = json_decode($server['last_checks'], true);
             if (!is_array($lastChecks)) {
                 $lastChecks = [];
+            }
+
+            // Önceki durumu al
+            $previousStatus = null;
+            if (count($lastChecks) > 0) {
+                $previousStatus = $lastChecks[count($lastChecks) - 1]['status'];
+            }
+
+            // Durum değiştiyse bildirim oluştur
+            if ($previousStatus !== null && $previousStatus !== $status) {
+                $serverName = "{$server['name']} (IP: {$server['ip']}, ID: {$server['assigned_id']})";
+                if ($status === 1) {
+                    $active_messages = getActiveMessages();
+                    $msg = $active_messages[array_rand($active_messages)];
+                } else {
+                    $passive_messages = getPassiveMessages();
+                    $msg = $passive_messages[array_rand($passive_messages)];
+                }
+                $message = "Sunucu {$serverName} {$msg}.";
+
+                $this->notificationService->addNotification([
+                    "server_id" => $server['id'],
+                    "message" => $message,
+                ]);
             }
 
             $currentTime = date('Y-m-d H:i:s');

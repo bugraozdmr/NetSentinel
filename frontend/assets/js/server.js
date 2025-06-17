@@ -1,15 +1,28 @@
 import { API_BASE_URL, APP_NAME, INTERVAL_TIME } from "./config.js";
 
 $(document).ready(function () {
-  if (
-    window.location.pathname === `/${APP_NAME}/` ||
-    window.location.pathname === `/${APP_NAME}/index.php`
-  ) {
-    setInterval(function () {
-      location.reload();
-    }, INTERVAL_TIME);
+  function updateNotificationCount() {
+    $.ajax({
+      url: `${API_BASE_URL}/notifications/count/all`,
+      method: "GET",
+      dataType: "json",
+      success: function (data) {
+        const count = data.unread_count;
+        const $badge = $('button[aria-label="notifications"] span');
+
+        if (count && count > 0) {
+          $badge.text(count).show();
+        } else {
+          $badge.hide();
+        }
+      },
+      error: function () {
+        console.error("Bildirim sayısı alınamadı");
+      },
+    });
   }
 
+  //* HOME PAGE
   const $tbody = $("#serverTableBody");
   const $search = $("#searchInput");
   const $loading = $("#loading");
@@ -388,7 +401,7 @@ $(document).ready(function () {
     });
   });
 
-  // DETAILS
+  //* DETAILS Page
   let pingChart = null;
 
   $(document).on("click", ".detail-btn", function () {
@@ -397,6 +410,58 @@ $(document).ready(function () {
       window.location.href = `/${APP_NAME}/server/detail/${serverId}`;
     }
   });
+
+  function fetchNotifications(serverId) {
+    const $notifContainer = $("#notifications");
+    const $loading = $("#notifications-loading");
+    const $list = $("#notifications-list");
+
+    $notifContainer.removeClass("hidden");
+    $loading.show();
+    $list.empty();
+
+    $.get(`${API_BASE_URL}/notifications/server/${serverId}`)
+      .done(function (data) {
+        $loading.hide();
+
+        if (data.notifications && data.notifications.length > 0) {
+          data.notifications.forEach(function (notif) {
+            // Duruma göre stil
+            const isUnread = notif.status === "unread";
+
+            const borderColor = isUnread
+              ? "border-blue-400"
+              : "border-gray-300";
+            const bgColor = isUnread ? "bg-blue-50" : "bg-white";
+            const fontWeight = isUnread ? "font-semibold" : "font-normal";
+            const textColor = isUnread ? "text-gray-900" : "text-gray-700";
+
+            const li = $(`
+            <li class="border ${borderColor} rounded-lg p-4 mb-3 shadow-sm ${bgColor} hover:shadow-md transition-shadow duration-200 cursor-pointer">
+              <p class="${fontWeight} ${textColor}">${notif.message}</p>
+              <time class="block text-xs text-gray-500 mt-1" datetime="${
+                notif.created_at
+              }">
+                ${new Date(notif.created_at).toLocaleString()}
+              </time>
+            </li>
+          `);
+
+            $list.append(li);
+          });
+        } else {
+          $list.html(
+            '<p class="text-center text-gray-500 italic py-4">Bildirim bulunamadı.</p>'
+          );
+        }
+      })
+      .fail(function () {
+        $loading.hide();
+        $list.html(
+          '<p class="text-center text-red-600 font-semibold py-4">Bildirimler yüklenemedi.</p>'
+        );
+      });
+  }
 
   $(document).ready(function () {
     const pathParts = window.location.pathname.split("/");
@@ -554,10 +619,106 @@ $(document).ready(function () {
 
       $("#loading-detail").hide();
       $("#serverDetail").removeClass("hidden");
+
+      fetchNotifications(serverId);
     }).fail(function () {
       $("#loading-detail").text("Veri yüklenemedi.");
     });
   });
 
-  fetchServers();
+  // * Notifications
+  function loadNotifications() {
+    $.ajax({
+      url: `${API_BASE_URL}/notifications/`,
+      method: "GET",
+      dataType: "json",
+      success: function (response) {
+        const $list = $("#notifications-list");
+        $list.empty();
+
+        if (!response.notifications || response.notifications.length === 0) {
+          $list.html(
+            '<div class="bg-white shadow-lg rounded-xl p-6 text-center text-gray-500">Henüz hiç bildiriminiz yok.</div>'
+          );
+          return;
+        }
+
+        response.notifications.forEach((notification) => {
+          const isUnread = notification.status === "unread";
+
+          const borderClass = isUnread ? "border-blue-600" : "border-gray-300";
+          const bgClass = isUnread ? "bg-blue-50" : "bg-white";
+          const newBadge = isUnread
+            ? '<span class="ml-4 inline-block text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-1 rounded">Yeni</span>'
+            : "";
+
+          // Tarih formatı için basit fonksiyon
+          const date = new Date(notification.created_at);
+          const formattedDate = date.toLocaleDateString("tr-TR", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
+          const itemHtml = `
+          <div class="flex items-start bg-white shadow rounded-xl p-4 transition hover:shadow-lg border-l-4 ${borderClass} ${bgClass}">
+            <div class="text-2xl mr-4 mt-1">📣</div>
+            <div class="flex-1">
+              <p class="text-gray-800 font-medium">${notification.message}</p>
+              <p class="text-sm text-gray-500 mt-1">${formattedDate}</p>
+            </div>
+            ${newBadge}
+          </div>
+        `;
+
+          $list.append(itemHtml);
+        });
+      },
+      error: function () {
+        $("#notifications-list").html(
+          '<div class="text-center text-red-500">Bildirimler yüklenirken hata oluştu.</div>'
+        );
+      },
+    });
+  }
+
+  $("#mark-read-btn").on("click", function () {
+    $.ajax({
+      url: `${API_BASE_URL}/notifications/mark-read`,
+      method: "POST",
+      success: function (response) {
+        location.reload();
+      },
+      error: function () {
+        alert("Bildirimleri okundu olarak işaretlerken hata oluştu.");
+      },
+    });
+  });
+
+  // TODO : bunları sonra bir yerde topla bu gelirse şunu sesle şu gelirse şunları sesle !!!
+  $(document).ready(function () {
+    if (
+      window.location.pathname === "/netsentinel/notifications" ||
+      window.location.pathname === "/netsentinel/notifications/"
+    ) {
+      loadNotifications();
+    }
+  });
+
+  //? sayfayı yenile belirlitilen aralıklarda
+  if (
+    window.location.pathname === `/${APP_NAME}/` ||
+    window.location.pathname === `/${APP_NAME}/index.php`
+  ) {
+    //! burda çekme yapıldı index özel
+    fetchServers();
+
+    setInterval(function () {
+      location.reload();
+    }, INTERVAL_TIME);
+  }
+
+  updateNotificationCount();
 });

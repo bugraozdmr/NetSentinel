@@ -1,11 +1,11 @@
 - Localization
 - Mobile Version
-- NOTIFICATION
+- NOTIFICATION // PAGINATION
 - CRON JOB (+)
 - Settings table and interval adjustment
 - manual control for one specific server in details page
 - SCAN server status and ports METHODS needs to change a bit more professional
-- advanced log mechanism
+- advanced log mechanism !!!
 - Authentication ( JWT )
 - making this as service with .conf file
 - port eklenince server mevcut mu kontrolu
@@ -17,3 +17,11 @@
 "error": "Database error: "
 }
 }
+
+--- ERİŞİM engeli assetlere /htaccess üzerinden yaparsın basit
+http://localhost/netsentinel/assets/js/config.js
+
+--- yönlendirmeler kayıp
+api ve assets için giriyor
+
+-- kullanıcı buraya erişebilir sadece api yolunu düzenle yeter

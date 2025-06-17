@@ -1,7 +1,16 @@
 RewriteEngine On
 
+# Eğer tam olarak /api/ geldiyse /api/servers'a yönlendir 
+# TODO: FIX
+RewriteCond %{REQUEST_URI} ^/api/?$ [NC]
+RewriteRule ^api/?$ api/servers [R=302,L]
+
 # API route'larını backend'e yönlendir
 RewriteRule ^api/?(.*)$ ../backend/app/public/index.php?route=$1 [QSA,L]
+
+# scriptleri okuyamasın kullanıcı
+# RewriteCond %{REQUEST_URI} ^/netsentinel/assets/
+# RewriteRule ^ - [F]
 
 # Geri kalan her şeyi frontend'e yönlendir
 RewriteRule ^$ frontend/index.php [QSA,L]

@@ -13,6 +13,7 @@ return [
         // Notifications
         "notifications" => "NotificationController@getNotifications",
         "notifications/server" => "NotificationController@getNotificationsByServerId",
+        "notifications/count" => "NotificationController@notificationCountAction",
     ],
     "POST" => [
         // Servers
@@ -23,6 +24,7 @@ return [
 
         // Notifications
         "notifications" => "NotificationController@addNotification",
+        "notifications/mark-read" => "NotificationController@markAsReadAll",
     ],
     "PUT" => [
         // Servers
