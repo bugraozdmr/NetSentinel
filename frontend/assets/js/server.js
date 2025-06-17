@@ -1,6 +1,15 @@
-import { API_BASE_URL, APP_NAME } from "./config.js";
+import { API_BASE_URL, APP_NAME, INTERVAL_TIME } from "./config.js";
 
 $(document).ready(function () {
+  if (
+    window.location.pathname === `/${APP_NAME}/` ||
+    window.location.pathname === `/${APP_NAME}/index.php`
+  ) {
+    setInterval(function () {
+      location.reload();
+    }, INTERVAL_TIME);
+  }
+
   const $tbody = $("#serverTableBody");
   const $search = $("#searchInput");
   const $loading = $("#loading");
@@ -432,15 +441,15 @@ $(document).ready(function () {
         const formattedTime = check.time.replace("T", " ").substring(0, 19);
 
         const div = $(`
-    <div class="flex-1 flex items-center space-x-3 bg-gray-50 dark:bg-gray-900 rounded-lg px-4 py-2 shadow-md hover:shadow-lg transition-shadow duration-200 cursor-default mx-1">
-      <span class="flex items-center justify-center w-8 h-8 rounded-full text-white ${colorBg} ${colorBgDark} font-semibold text-lg select-none">
-        ${icon}
-      </span>
-      <span class="text-gray-900 dark:text-gray-100 font-semibold text-sm tracking-wide leading-tight">
-        ${formattedTime}
-      </span>
-    </div>
-  `);
+        <div class="flex-1 flex items-center space-x-3 bg-gray-50 dark:bg-gray-900 rounded-lg px-4 py-2 shadow-md hover:shadow-lg transition-shadow duration-200 cursor-default mx-1">
+          <span class="flex items-center justify-center w-8 h-8 rounded-full text-white ${colorBg} ${colorBgDark} font-semibold text-lg select-none">
+            ${icon}
+          </span>
+          <span class="text-gray-900 dark:text-gray-100 font-semibold text-sm tracking-wide leading-tight">
+            ${formattedTime}
+          </span>
+        </div>
+      `);
         $checkList.append(div);
 
         labels.push(check.time.substr(11, 5));
@@ -543,10 +552,10 @@ $(document).ready(function () {
         $ports.append(portDiv);
       });
 
-      $("#loading").hide();
+      $("#loading-detail").hide();
       $("#serverDetail").removeClass("hidden");
     }).fail(function () {
-      $("#loading").text("Veri yüklenemedi.");
+      $("#loading-detail").text("Veri yüklenemedi.");
     });
   });
 
