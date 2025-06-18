@@ -12,6 +12,15 @@
 - düzenlencek http://192.168.253.5/netsentinel/api .htaccess
 - refactor kod
 
+(***
+    uzun süreden kapalı olan sunucular için bildirimler oluşcak
+    /24 gibi ip'ler alıncak sunucular ona göre oluşcak
+    runner cron olmadan nasıl çalışcak
+
+    Mobile
+    Localization
+)
+
 - pagination notifications'a
 ** logger ekle bence güzelce şuanlık sonra exception handler kapsamlı
 ** MAIL yollama ?! notification yanında 
@@ -22,6 +31,8 @@
 "error": "Database error: "
 }
 }
+
+pagination : NOTIFICATION için
 
 --- ERİŞİM engeli assetlere /htaccess üzerinden yaparsın basit
 http://localhost/netsentinel/assets/js/config.js
@@ -34,3 +45,6 @@ api ve assets için giriyor
 -- kritik sunucu down olursa kırmızı göster
 
 -- mesela gün boyunca kapalı ise bu bildirim gönder kapalıydı bu ne oluyor diye uzun süre kapalı kalanlar için
+
+
+11 sn 160 sunucu 56 çalışan

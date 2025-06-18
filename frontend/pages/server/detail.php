@@ -28,6 +28,10 @@
             <p id="location" class="text-lg font-semibold text-slate-100 mt-1"></p>
         </div>
         <div class="bg-slate-800/80 p-5 rounded-2xl shadow-lg border border-slate-700 flex flex-col items-start">
+            <div class="flex items-center gap-2 mb-1 text-blue-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 12.414a4 4 0 10-1.414 1.414l4.243 4.243a1 1 0 001.414-1.414z"/></svg> <span class="text-xs text-slate-400">Panel</span></div>
+            <p id="panel" class="text-lg font-semibold text-slate-100 mt-1"></p>
+        </div>
+        <div class="bg-slate-800/80 p-5 rounded-2xl shadow-lg border border-slate-700 flex flex-col items-start">
             <div class="flex items-center gap-2 mb-1 text-blue-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3"/></svg> <span class="text-xs text-slate-400">Durum</span></div>
             <p id="is_active" class="text-lg font-semibold text-slate-100 mt-1"></p>
         </div>

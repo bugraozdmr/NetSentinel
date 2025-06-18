@@ -135,7 +135,7 @@ $(document).ready(function () {
     if (p === 'backup') return `<img src="https://cdn.simpleicons.org/minio/00B4B6" alt="Backup" title="Backup" class="${sizeClass} inline-block align-middle" />`;
     if (p === 'esxi') return `<img src="https://cdn.simpleicons.org/vmware/607078" alt="ESXi" title="ESXi" class="${sizeClass} inline-block align-middle" />`;
     if (p === 'yok') return `<img src="https://cdn.simpleicons.org/protonmail/gray" alt="Panel Yok" title="Panel Yok" class="${sizeClass} inline-block align-middle opacity-40" />`;
-    if (p === 'diğer' || p === 'diger') return `<img src="https://cdn.simpleicons.org/settings/gray" alt="Diğer" title="Diğer" class="${sizeClass} inline-block align-middle" />`;
+    if (p === 'diğer' || p === 'diger') return `<svg class="${sizeClass} inline-block align-middle text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 0 1 0 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 0 1 0-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg>`;
     return `<img src="https://cdn.simpleicons.org/question/gray" alt="Bilinmiyor" title="Bilinmiyor" class="${sizeClass} inline-block align-middle opacity-40" />`;
   }
 
@@ -255,7 +255,7 @@ $(document).ready(function () {
       success: function (data) {
         allServers = data.servers || [];
         updateSummaryBar(allServers);
-        renderPanel(allServers);
+        applyFilters();
       },
       error: function () {
         $error.removeClass("hidden");
@@ -266,15 +266,17 @@ $(document).ready(function () {
     });
   }
 
-  $search.on("input", function () {
-    const keyword = $(this).val().toLowerCase();
-    const filtered = allServers.filter((s) =>
-      [s.ip, s.name, s.location].some((val) =>
-        val.toLowerCase().includes(keyword)
-      )
-    );
-    renderPanel(filtered);
-  });
+  function updateSummaryBar(servers) {
+    const total = servers.length;
+    const active = servers.filter(s => s.is_active == 1).length;
+    const down = total - active;
+    $("#totalServers").text(total);
+    $("#activeServers").text(active);
+    $("#downServers").text(down);
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString("tr-TR", { hour12: false });
+    $("#lastUpdate").text("Son güncelleme: " + timeStr);
+  }
 
   // Silme butonlarına tıklama (delegation)
   $(document).on("click", ".delete-btn", function () {
@@ -339,7 +341,6 @@ $(document).ready(function () {
         ports: selectedPorts,
       };
 
-      console.log('Add Server outgoing data:', formData);
 
       $successMsg.addClass("hidden");
       $errorMsg.addClass("hidden").text("");
@@ -682,6 +683,9 @@ $(document).ready(function () {
       $("#serverDetail").removeClass("hidden");
 
       fetchNotifications(serverId);
+
+      // Panel bilgisini doldur
+      $("#panel").text(server.panel || "-");
     }).fail(function () {
       $("#loading-detail").text("Veri yüklenemedi.");
     });
@@ -783,33 +787,48 @@ $(document).ready(function () {
 
   updateNotificationCount();
 
-  // Lokasyon filtreleme
-  function setLocationFilter(selected) {
-    $(".location-filter-btn").removeClass("bg-blue-600 text-white").addClass("bg-slate-800 text-blue-300");
+  // Çoklu filtreleme sistemi
+  let currentFilters = {
+    status: 'all',
+    location: 'all',
+    panel: 'all',
+    search: ''
+  };
+
+  function applyFilters() {
     let filtered = allServers;
 
+    // Durum filtresi
+    if (currentFilters.status !== 'all') {
+      filtered = filtered.filter(server => {
+        if (currentFilters.status === 'active') {
+          return server.is_active === 1;
+        } else if (currentFilters.status === 'inactive') {
+          return server.is_active === 0;
+        }
+        return true;
+      });
+    }
+
     // Lokasyon filtresi
-    if (selected === "Tümü") {
-      $("#locationAllBtn").addClass("bg-blue-600 text-white").removeClass("bg-slate-800 text-blue-300");
-    } else if (selected === "Mars") {
-      $("#locationMarsBtn").addClass("bg-blue-600 text-white").removeClass("bg-slate-800 text-blue-300");
-      filtered = filtered.filter(s => (s.location || '').toLowerCase().includes('mars'));
-    } else if (selected === "Hetzner") {
-      $("#locationHetznerBtn").addClass("bg-blue-600 text-white").removeClass("bg-slate-800 text-blue-300");
-      filtered = filtered.filter(s => (s.location || '').toLowerCase().includes('hetzner'));
+    if (currentFilters.location !== 'all') {
+      filtered = filtered.filter(server =>
+        (server.location || '').toLowerCase() === currentFilters.location.toLowerCase()
+      );
     }
 
     // Panel filtresi
-    const selectedPanel = $("#panelFilter").val();
-    if (selectedPanel !== "all") {
-      filtered = filtered.filter(s => (s.panel || '').toLowerCase() === selectedPanel.toLowerCase());
+    if (currentFilters.panel !== 'all') {
+      filtered = filtered.filter(server =>
+        (server.panel || '').toLowerCase() === currentFilters.panel.toLowerCase()
+      );
     }
 
     // Arama filtresi
-    const searchTerm = $("#searchInput").val().toLowerCase();
-    if (searchTerm) {
-      filtered = filtered.filter(s =>
-        [s.ip, s.name, s.location].some(val =>
+    if (currentFilters.search) {
+      const searchTerm = currentFilters.search.toLowerCase();
+      filtered = filtered.filter(server =>
+        [server.ip, server.name, server.location, server.panel].some(val =>
           (val || '').toLowerCase().includes(searchTerm)
         )
       );
@@ -817,26 +836,58 @@ $(document).ready(function () {
 
     updateSummaryBar(filtered);
     renderPanel(filtered);
+    updateFilterButtons();
   }
 
-  // Panel filtresi değiştiğinde
-  $("#panelFilter").on("change", function () {
-    const selectedLocation = $(".location-filter-btn.bg-blue-600").data("location") || "Tümü";
-    setLocationFilter(selectedLocation);
+  function updateFilterButtons() {
+    // Durum butonları
+    $('.status-filter-btn').removeClass('bg-blue-600 text-white border-blue-600 shadow').addClass('bg-slate-800 text-green-300 border-slate-700');
+    $(`.status-filter-btn[data-status="${currentFilters.status}"]`).removeClass('bg-slate-800 text-green-300 border-slate-700').addClass('bg-blue-600 text-white border-blue-600 shadow');
+
+    // Lokasyon butonları
+    $('.location-filter-btn').removeClass('bg-blue-600 text-white border-blue-600 shadow').addClass('bg-slate-800 text-blue-300 border-slate-700');
+    $(`.location-filter-btn[data-location="${currentFilters.location}"]`).removeClass('bg-slate-800 text-blue-300 border-slate-700').addClass('bg-blue-600 text-white border-blue-600 shadow');
+
+    // Panel select
+    $('#panelFilter').val(currentFilters.panel);
+  }
+
+  // Durum filtreleme
+  $('.status-filter-btn').on('click', function () {
+    currentFilters.status = $(this).data('status');
+    applyFilters();
   });
 
-  // Arama inputu değiştiğinde
-  $("#searchInput").on("input", function () {
-    const selectedLocation = $(".location-filter-btn.bg-blue-600").data("location") || "Tümü";
-    setLocationFilter(selectedLocation);
+  // Lokasyon filtreleme
+  $('.location-filter-btn').on('click', function () {
+    currentFilters.location = $(this).data('location');
+    applyFilters();
   });
 
-  // Lokasyon butonlarına tıklama
-  $(".location-filter-btn").on("click", function () {
-    const selected = $(this).data("location");
-    setLocationFilter(selected);
+  // Panel filtreleme
+  $('#panelFilter').on('change', function () {
+    currentFilters.panel = $(this).val();
+    applyFilters();
   });
 
-  // Sayfa yüklenince varsayılan olarak 'Tümü' seçili olsun
-  setLocationFilter("Tümü");
+  // Arama filtreleme
+  $('#searchInput').on('input', function () {
+    currentFilters.search = $(this).val();
+    applyFilters();
+  });
+
+  // Filtreleri temizle
+  function clearAllFilters() {
+    currentFilters = {
+      status: 'all',
+      location: 'all',
+      panel: 'all',
+      search: ''
+    };
+    $('#searchInput').val('');
+    applyFilters();
+  }
+
+  // Filtreleri Temizle butonunu sadece HTML'deki butona bağla
+  $('#clearFiltersBtn').on('click', clearAllFilters);
 });

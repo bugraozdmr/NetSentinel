@@ -37,14 +37,14 @@ class ServerController
         ]);
     }
 
-    public function addServer($data)
+    public function addServer($input)
     {
-        $errors = ServerValidator::validateInsert($data);
+        $errors = ServerValidator::validateInsert($input);
         if (!empty($errors)) {
             throw new ValidationException("Validation failed", $errors);
         }
 
-        echo json_encode($this->serverService->addServer($data));
+        echo json_encode($this->serverService->addServer($input));
     }
 
     public function editServer($id, $data)

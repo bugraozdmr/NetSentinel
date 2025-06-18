@@ -17,27 +17,30 @@
             <div class="text-lg" id="lastUpdate">Son güncelleme: --:--:--</div>
         </div>
     </div>
-    <!-- Lokasyon Seçimi ve Arama -->
-    <div class="flex flex-wrap gap-4 mb-8">
-        <div class="flex gap-2">
-            <button id="locationAllBtn" class="location-filter-btn px-4 py-2 rounded-lg bg-blue-600 text-white font-medium transition-all" data-location="Tümü">Tümü</button>
-            <button id="locationMarsBtn" class="location-filter-btn px-4 py-2 rounded-lg bg-slate-800 text-blue-300 font-medium transition-all" data-location="Mars">Mars</button>
-            <button id="locationHetznerBtn" class="location-filter-btn px-4 py-2 rounded-lg bg-slate-800 text-blue-300 font-medium transition-all" data-location="Hetzner">Hetzner</button>
-        </div>
-        <div class="flex-1">
-            <select id="panelFilter" class="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-blue-300 font-medium transition-all">
-                <option value="all">Tüm Paneller</option>
-                <option value="cPanel">cPanel</option>
-                <option value="Plesk">Plesk</option>
-                <option value="Backup">Backup</option>
-                <option value="ESXi">ESXi</option>
-                <option value="Yok">Yok</option>
-                <option value="Diğer">Diğer</option>
-            </select>
-        </div>
-        <div class="flex-1">
-            <input type="text" id="searchInput" placeholder="Sunucu ara..." class="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-blue-300 font-medium transition-all placeholder-blue-300/50" />
-        </div>
+    <!-- Filtreler: Büyük ve Modern Tek Satır -->
+    <div class="flex flex-wrap gap-3 mb-8 items-center">
+        <!-- Durum Filtreleme -->
+        <button id="statusAllBtn" class="chip-btn status-filter-btn bg-blue-600 text-white border border-blue-600 rounded-full px-5 py-2 text-sm font-semibold transition-all shadow" data-status="all">Tümü</button>
+        <button id="statusActiveBtn" class="chip-btn status-filter-btn bg-slate-800 text-green-300 border border-slate-700 rounded-full px-5 py-2 text-sm font-semibold transition-all" data-status="active">Aktif</button>
+        <button id="statusInactiveBtn" class="chip-btn status-filter-btn bg-slate-800 text-red-300 border border-slate-700 rounded-full px-5 py-2 text-sm font-semibold transition-all" data-status="inactive">Kapalı</button>
+        <!-- Lokasyon Filtreleme -->
+        <button id="locationAllBtn" class="chip-btn location-filter-btn bg-slate-800 text-blue-200 border border-slate-700 rounded-full px-5 py-2 text-sm font-semibold transition-all" data-location="all">Tümü</button>
+        <button id="locationMarsBtn" class="chip-btn location-filter-btn bg-slate-800 text-blue-200 border border-slate-700 rounded-full px-5 py-2 text-sm font-semibold transition-all" data-location="mars">Mars</button>
+        <button id="locationHetznerBtn" class="chip-btn location-filter-btn bg-slate-800 text-blue-200 border border-slate-700 rounded-full px-5 py-2 text-sm font-semibold transition-all" data-location="hetzner">Hetzner</button>
+        <!-- Panel Filtreleme -->
+        <select id="panelFilter" class="ml-2 px-5 py-2 bg-slate-800 border border-slate-700 rounded-full text-blue-200 text-sm font-semibold transition-all h-10 min-w-[120px]">
+            <option value="all">Tüm Paneller</option>
+            <option value="cPanel">cPanel</option>
+            <option value="Plesk">Plesk</option>
+            <option value="Backup">Backup</option>
+            <option value="ESXi">ESXi</option>
+            <option value="Yok">Yok</option>
+            <option value="Diğer">Diğer</option>
+        </select>
+        <!-- Arama -->
+        <input type="text" id="searchInput" placeholder="Ara..." class="ml-2 px-5 py-2 bg-slate-800 border border-slate-700 rounded-full text-blue-200 text-sm font-semibold transition-all placeholder-blue-300/50 h-10 w-44" />
+        <!-- Filtreleri Temizle: Tek büyük buton, sağda -->
+        <button id="clearFiltersBtn" class="ml-auto px-6 py-2 rounded-full bg-red-600 text-white text-base font-semibold transition-all hover:bg-red-700">Filtreleri Temizle</button>
     </div>
     <!-- Kart Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8" id="serverPanelGrid">
