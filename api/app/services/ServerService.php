@@ -6,9 +6,11 @@ require_once __DIR__ . '/../utils/config.php';
 require_once __DIR__ . '/../data/messages.php';
 require_once __DIR__ . '/../exceptions/DatabaseException.php';
 require_once __DIR__ . '/../exceptions/NotFoundException.php';
+require_once __DIR__ . '/../core/Logger.php';
 
 use App\Exceptions\DatabaseException;
 use App\Exceptions\NotFoundException;
+use App\Core\Logger;
 
 Config::load();
 
@@ -17,12 +19,14 @@ class ServerService
     private $serverModel;
     private $portService;
     private $notificationService;
+    private $logger;
 
     public function __construct($pdo)
     {
         $this->serverModel = new ServerModel($pdo);
         $this->portService = new PortService($pdo);
         $this->notificationService = new NotificationService($pdo);
+        $this->logger = Logger::getInstance();
     }
 
     public function getServersWithStatus()
@@ -34,6 +38,7 @@ class ServerService
             $server['ports'] = $ports;
         }
 
+        $this->logger->info("Retrieved servers with status", ['count' => count($servers)]);
         return $servers;
     }
 
@@ -48,6 +53,7 @@ class ServerService
         $ports = $this->portService->getPortsByServer((int)$id);
         $server['ports'] = $ports;
 
+        $this->logger->info("Retrieved server by ID", ['server_id' => $id, 'server_name' => $server['name']]);
         return $server;
     }
 
@@ -67,6 +73,10 @@ class ServerService
                 $portInsert = $this->portService->addPorts(['ports' => [$portData], 'server_id' => $serverId]);
 
                 if (isset($portInsert['error'])) {
+                    $this->logger->warning("Server added but port insertion failed", [
+                        'server_id' => $serverId,
+                        'port_error' => $portInsert
+                    ]);
                     return [
                         "message" => "Server added, but one or more ports failed.",
                         "server_id" => $serverId,
@@ -75,6 +85,12 @@ class ServerService
                 }
             }
         }
+
+        $this->logger->info("Server added successfully", [
+            'server_id' => $serverId,
+            'server_name' => $data['name'] ?? 'Unknown',
+            'ip' => $data['ip'] ?? 'Unknown'
+        ]);
 
         return $result;
     }
@@ -102,8 +118,17 @@ class ServerService
 
                 if (isset($addResult['error'])) {
                     $portResults['add_error'] = $addResult['error'];
+                    $this->logger->error("Failed to add ports to server", [
+                        'server_id' => $id,
+                        'ports' => $addedPorts,
+                        'error' => $addResult['error']
+                    ]);
                 } else {
                     $portResults['added_ports'] = array_values($addedPorts);
+                    $this->logger->info("Added ports to server", [
+                        'server_id' => $id,
+                        'ports' => $addedPorts
+                    ]);
                 }
             }
 
@@ -112,24 +137,44 @@ class ServerService
 
                 if (isset($deleteResult['error'])) {
                     $portResults['delete_error'] = $deleteResult['error'];
+                    $this->logger->error("Failed to delete ports from server", [
+                        'server_id' => $id,
+                        'ports' => $removedPorts,
+                        'error' => $deleteResult['error']
+                    ]);
                 } else {
                     $portResults['removed_ports'] = array_values($removedPorts);
+                    $this->logger->info("Removed ports from server", [
+                        'server_id' => $id,
+                        'ports' => $removedPorts
+                    ]);
                 }
             }
         }
+
+        $this->logger->info("Server updated successfully", [
+            'server_id' => $id,
+            'server_name' => $data['name'] ?? 'Unknown'
+        ]);
 
         return array_merge($updateResult, $portResults);
     }
 
     public function deleteServer($serverId)
     {
-        return $this->serverModel->deleteServer($serverId);
+        $result = $this->serverModel->deleteServer($serverId);
+        
+        $this->logger->info("Server deleted", ['server_id' => $serverId]);
+        
+        return $result;
     }
 
     //* STATUS CHECKER
     public function checkAllStatuses()
     {
         try {
+            $this->logger->info("Starting server status check");
+            
             $servers = $this->getServersWithStatus();
 
             $processes = [];
@@ -173,6 +218,10 @@ class ServerService
 
                 if (trim($errorOutput)) {
                     file_put_contents(__DIR__ . '/../../ping_errors.log', "Server #{$index}: $errorOutput\n", FILE_APPEND);
+                    $this->logger->error("Ping error for server", [
+                        'server_index' => $index,
+                        'error' => $errorOutput
+                    ]);
                 }
 
                 $server = $servers[$index];
@@ -188,6 +237,9 @@ class ServerService
                     $status = isset($pingResult['status']) ? (int)$pingResult['status'] : 0;
                     $avgMs = isset($pingResult['avg_ms']) ? $pingResult['avg_ms'] : null;
                 }
+
+                // Log server check
+                $this->logger->logServerCheck($server['name'], $server['ip'], $status, $avgMs);
 
                 $lastChecks = json_decode($server['last_checks'], true);
                 if (!is_array($lastChecks)) {
@@ -216,6 +268,14 @@ class ServerService
                         "server_id" => $server['id'],
                         "message" => $message,
                     ]);
+
+                    $this->logger->notice("Server status changed", [
+                        'server_name' => $server['name'],
+                        'server_ip' => $server['ip'],
+                        'previous_status' => $previousStatus,
+                        'new_status' => $status,
+                        'message' => $message
+                    ]);
                 }
 
                 $currentTime = date('Y-m-d H:i:s');
@@ -242,8 +302,18 @@ class ServerService
             $this->scanPorts($activeServers);
             $this->markPortsClosed($inactiveServers);
             
+            $this->logger->info("Server status check completed", [
+                'total_servers' => count($servers),
+                'active_servers' => count($activeServers),
+                'inactive_servers' => count($inactiveServers)
+            ]);
+            
         } catch (Exception $e) {
-            error_log("Error in checkAllStatuses: " . $e->getMessage());
+            $this->logger->error("Error in checkAllStatuses: " . $e->getMessage(), [
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
             throw $e; // Re-throw the exception so it can be handled by the exception handler
         }
     }
@@ -251,6 +321,13 @@ class ServerService
     // Port tarama fonksiyonu
     public function scanPorts(array $activeServers)
     {
+        if (empty($activeServers)) {
+            $this->logger->debug("No active servers to scan ports for");
+            return;
+        }
+
+        $this->logger->info("Starting port scan for active servers", ['count' => count($activeServers)]);
+        
         $processes = [];
         $pipesList = [];
 
@@ -299,19 +376,38 @@ class ServerService
             $isOpen = (trim($output) === 'open') ? 1 : 0;
 
             if ($errorOutput) {
-                error_log("Port scan error on port $portId: $errorOutput");
+                $this->logger->error("Port scan error", [
+                    'port_id' => $portId,
+                    'error' => $errorOutput
+                ]);
             }
 
             try {
                 $this->portService->updatePortStatus($portId, $isOpen);
+                $this->logger->debug("Port status updated", [
+                    'port_id' => $portId,
+                    'status' => $isOpen ? 'open' : 'closed'
+                ]);
             } catch (Exception $e) {
-                error_log("Failed to update port status for port $portId: " . $e->getMessage());
+                $this->logger->error("Failed to update port status", [
+                    'port_id' => $portId,
+                    'error' => $e->getMessage()
+                ]);
             }
         }
+
+        $this->logger->info("Port scan completed", ['ports_scanned' => count($processes)]);
     }
 
     public function markPortsClosed(array $inactiveServers)
     {
+        if (empty($inactiveServers)) {
+            $this->logger->debug("No inactive servers to mark ports closed for");
+            return;
+        }
+
+        $this->logger->info("Marking ports closed for inactive servers", ['count' => count($inactiveServers)]);
+        
         foreach ($inactiveServers as $server) {
             if (!isset($server['ports']) || empty($server['ports'])) {
                 continue; // Skip servers without ports
@@ -325,10 +421,16 @@ class ServerService
                 $portId = $port['id'];
                 try {
                     $this->portService->updatePortStatus($portId, 0);
+                    $this->logger->debug("Port marked as closed", ['port_id' => $portId]);
                 } catch (Exception $e) {
-                    error_log("Failed to mark port $portId as closed: " . $e->getMessage());
+                    $this->logger->error("Failed to mark port as closed", [
+                        'port_id' => $portId,
+                        'error' => $e->getMessage()
+                    ]);
                 }
             }
         }
+
+        $this->logger->info("Finished marking ports closed for inactive servers");
     }
 }
