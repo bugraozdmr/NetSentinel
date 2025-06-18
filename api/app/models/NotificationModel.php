@@ -1,6 +1,12 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../exceptions/DatabaseException.php';
+require_once __DIR__ . '/../exceptions/ValidationException.php';
+require_once __DIR__ . '/../exceptions/NotFoundException.php';
 
+use App\Exceptions\DatabaseException;
+use App\Exceptions\ValidationException;
+use App\Exceptions\NotFoundException;
 
 class NotificationModel
 {
@@ -23,9 +29,7 @@ class NotificationModel
             $notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return $notifications;
         } catch (PDOException $e) {
-            error_log("getAllNotifications error: " . $e->getMessage());
-            http_response_code(500);
-            return ["error" => "Database error: " . $e->getMessage()];
+            throw new DatabaseException("Failed to fetch all notifications", ['details' => $e->getMessage()]);
         }
     }
 
@@ -33,7 +37,7 @@ class NotificationModel
     {
         try {
             if (!is_numeric($serverId)) {
-                throw new Exception("Invalid server ID.");
+                throw new ValidationException("Invalid server ID", ['server_id' => $serverId]);
             }
 
             $stmt = $this->pdo->prepare("
@@ -46,12 +50,7 @@ class NotificationModel
 
             return $notifications;
         } catch (PDOException $e) {
-            error_log("getNotificationsByServerId error: " . $e->getMessage());
-            http_response_code(500);
-            return ["error" => "Database error: " . $e->getMessage()];
-        } catch (Exception $e) {
-            http_response_code(400);
-            return ["error" => $e->getMessage()];
+            throw new DatabaseException("Failed to fetch notifications by server ID", ['details' => $e->getMessage()]);
         }
     }
 
@@ -59,7 +58,7 @@ class NotificationModel
     {
         try {
             if (!isset($data['server_id']) || !isset($data['message'])) {
-                throw new Exception("Server ID and message are required.");
+                throw new ValidationException("Server ID and message are required", ['data' => $data]);
             }
 
             $status = isset($data['status']) && in_array($data['status'], ['unread', 'read'])
@@ -79,15 +78,7 @@ class NotificationModel
 
             return ["message" => "Notification added successfully"];
         } catch (PDOException $e) {
-            error_log("insertNotification error: " . $e->getMessage());
-            // return ["error" => "Database error: Something went wrong -- " . $e->getMessage()];
-            http_response_code(500);
-            return ["error" => "Database error: Something went wrong"];
-        } catch (Exception $e) {
-            error_log("insertNotification error: " . $e->getMessage());
-            http_response_code(400);
-            // return ["error" => $e->getMessage()];
-            return ["error" => "Something went wrong"];
+            throw new DatabaseException("Failed to insert notification", ['details' => $e->getMessage()]);
         }
     }
 
@@ -95,44 +86,41 @@ class NotificationModel
     {
         try {
             if (!$id || !is_numeric($id)) {
-                throw new Exception("Notification ID is required and must be numeric.");
+                throw new ValidationException("Notification ID is required and must be numeric", ['id' => $id]);
             }
 
             $stmt = $this->pdo->prepare("DELETE FROM notifications WHERE id = :id");
             $stmt->execute(['id' => $id]);
 
             if ($stmt->rowCount() === 0) {
-                http_response_code(404);
-                return ["error" => "Notification not found or already deleted."];
+                throw new NotFoundException("Notification not found or already deleted", ['id' => $id]);
             }
 
             return ["message" => "Notification deleted successfully."];
         } catch (PDOException $e) {
-            error_log("deleteNotification error: " . $e->getMessage());
-            http_response_code(500);
-            return ["error" => "Database error: Something went wrong -- " . $e->getMessage()];
-        } catch (Exception $e) {
-            error_log("deleteNotification error: " . $e->getMessage());
-            http_response_code(400);
-            return ["error" => $e->getMessage()];
+            throw new DatabaseException("Failed to delete notification", ['details' => $e->getMessage()]);
         }
     }
 
     public function getNotificationCount(int $serverId = null): int
     {
-        $query = "SELECT COUNT(*) as count FROM notifications WHERE status = 'unread'";
-        $params = [];
+        try {
+            $query = "SELECT COUNT(*) as count FROM notifications WHERE status = 'unread'";
+            $params = [];
 
-        if ($serverId !== null) {
-            $query .= " AND server_id = :serverId";
-            $params[':serverId'] = $serverId;
+            if ($serverId !== null) {
+                $query .= " AND server_id = :serverId";
+                $params[':serverId'] = $serverId;
+            }
+
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute($params);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return (int)($result['count'] ?? 0);
+        } catch (PDOException $e) {
+            throw new DatabaseException("Failed to get notification count", ['details' => $e->getMessage()]);
         }
-
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute($params);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        return (int)($result['count'] ?? 0);
     }
 
     public function markAllAsRead()
@@ -147,18 +135,15 @@ class NotificationModel
                 "updatedCount" => $stmt->rowCount()
             ];
         } catch (PDOException $e) {
-            error_log("markAllAsRead error: " . $e->getMessage());
-            http_response_code(500);
-            return ["error" => "db error: " . $e->getMessage()];
+            throw new DatabaseException("Failed to mark all notifications as read", ['details' => $e->getMessage()]);
         }
     }
 
-    // mark as read for serverId
     public function markAllAsReadByServerId($serverId)
     {
         try {
             if (!is_numeric($serverId)) {
-                throw new Exception("Invalid ID");
+                throw new ValidationException("Invalid server ID", ['server_id' => $serverId]);
             }
 
             $stmt = $this->pdo->prepare("UPDATE notifications SET status = 'read' WHERE status = 'unread' AND server_id = :server_id");
@@ -169,12 +154,7 @@ class NotificationModel
                 "updatedCount" => $stmt->rowCount()
             ];
         } catch (PDOException $e) {
-            error_log("markAllAsReadByServerId error: " . $e->getMessage());
-            http_response_code(500);
-            return ["error" => "db error: " . $e->getMessage()];
-        } catch (Exception $e) {
-            http_response_code(400);
-            return ["error" => $e->getMessage()];
+            throw new DatabaseException("Failed to mark server notifications as read", ['details' => $e->getMessage()]);
         }
     }
 }

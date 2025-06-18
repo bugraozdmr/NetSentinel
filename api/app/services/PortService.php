@@ -11,46 +11,22 @@ class PortService
         $this->portModel = new PortModel($pdo);
     }
 
-    /**
-     * One or more ports can be added
-     * $data: [
-     *   server_id => int,
-     *   port_number => int,           // One port
-     *   is_open => bool,              // Optional
-     *   ports => [                    // Multiple Ports
-     *      ['port_number'=>int, 'is_open'=>bool],
-     *      ...
-     *   ]
-     * ]
-     */
     public function addPorts(array $data)
     {
         return $this->portModel->insertPort($data);
     }
 
-    /**
-     * Delete Port
-     * $portId: int
-     */
     public function removePorts(array $portIds)
     {
         return $this->portModel->deletePorts(['ports' => $portIds]);
     }
 
-    /**
-     * Delete Ports
-     * $portId: int
-     * $ports: Array
-     */
     public function deletePortByServerAndNumber(int $serverId, array $ports)
     {
         return $this->portModel->deletePortsByServerId(['serverId' => $serverId, 'ports' => $ports]);
     }
 
 
-    /**
-     * List ports based on server_id
-     */
     public function getPortsByServer(int $serverId)
     {
         $ports = $this->portModel->getPortsByServer($serverId);

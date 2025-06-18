@@ -1,7 +1,11 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../utils/pingServer.php';
+require_once __DIR__ . '/../exceptions/DatabaseException.php';
+require_once __DIR__ . '/../exceptions/NotFoundException.php';
 
+use App\Exceptions\DatabaseException;
+use App\Exceptions\NotFoundException;
 
 class ServerModel
 {
@@ -19,9 +23,7 @@ class ServerModel
             $stmt = $this->pdo->query("SELECT * FROM servers");
             return $stmt->fetchAll();
         } catch (PDOException $e) {
-            error_log("getAllServers error: " . $e->getMessage());
-            http_response_code(500);
-            return ["error" => "Veritabanı hatası"];
+            throw new DatabaseException("Failed to fetch servers", ['details' => $e->getMessage()]);
         }
     }
 
@@ -33,15 +35,12 @@ class ServerModel
             $server = $stmt->fetch();
 
             if (!$server) {
-                // Kayıt yoksa null dönebiliriz
-                return null;
+                throw new NotFoundException("Server not found", ['id' => $id]);
             }
 
             return $server;
         } catch (PDOException $e) {
-            error_log("getServerById error: " . $e->getMessage());
-            http_response_code(500);
-            return ["error" => "Veritabanı hatası"];
+            throw new DatabaseException("Failed to fetch server", ['details' => $e->getMessage()]);
         }
     }
 
@@ -71,10 +70,7 @@ class ServerModel
                 "server_id" => $serverId
             ];
         } catch (PDOException $e) {
-            error_log("insertServer error: " . $e->getMessage());
-            http_response_code(500);
-            // return ["error" => "Database error: " . $e->getMessage()];
-            return ["error" => "Database error: Something went wrong "];
+            throw new DatabaseException("Failed to insert server", ['details' => $e->getMessage()]);
         }
     }
 
@@ -100,11 +96,13 @@ class ServerModel
                 'id' => $id,
             ]);
 
+            if ($stmt->rowCount() === 0) {
+                throw new NotFoundException("Server not found", ['id' => $id]);
+            }
+
             return ["message" => "Server updated successfully"];
         } catch (PDOException $e) {
-            error_log("updateServer error: " . $e->getMessage());
-            http_response_code(500);
-            return ["error" => "Database error"];
+            throw new DatabaseException("Failed to update server", ['details' => $e->getMessage()]);
         }
     }
 
@@ -114,28 +112,43 @@ class ServerModel
         try {
             $stmt = $this->pdo->prepare("DELETE FROM servers WHERE id = :id");
             $stmt->execute(['id' => $serverId]);
+            
+            if ($stmt->rowCount() === 0) {
+                throw new NotFoundException("Server not found", ['id' => $serverId]);
+            }
+            
             return ["message" => "Server deleted successfully"];
         } catch (PDOException $e) {
-            error_log("deleteServer error: " . $e->getMessage());
-            http_response_code(500);
-            return ["error" => "Veritabanı hatası"];
+            throw new DatabaseException("Failed to delete server", ['details' => $e->getMessage()]);
         }
     }
 
 
     public function getAllServersForStatus(): array
     {
-        $stmt = $this->pdo->query("SELECT id, ip, last_checks, location FROM servers");
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->pdo->query("SELECT id, ip, last_checks, location FROM servers");
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new DatabaseException("Failed to fetch servers for status", ['details' => $e->getMessage()]);
+        }
     }
 
     public function updateStatus(int $id, int $isActive, string $lastChecks,  string $location): void
     {
-        $stmt = $this->pdo->prepare("
-        UPDATE servers
-        SET is_active = ?, last_checks = ?, location = ?, last_check_at = NOW()
-        WHERE id = ?
-    ");
-        $stmt->execute([$isActive, $lastChecks, $location, $id]);
+        try {
+            $stmt = $this->pdo->prepare("
+                UPDATE servers
+                SET is_active = ?, last_checks = ?, location = ?, last_check_at = NOW()
+                WHERE id = ?
+            ");
+            $stmt->execute([$isActive, $lastChecks, $location, $id]);
+            
+            if ($stmt->rowCount() === 0) {
+                throw new NotFoundException("Server not found", ['id' => $id]);
+            }
+        } catch (PDOException $e) {
+            throw new DatabaseException("Failed to update server status", ['details' => $e->getMessage()]);
+        }
     }
 }

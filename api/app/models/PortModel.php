@@ -1,6 +1,12 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../exceptions/DatabaseException.php';
+require_once __DIR__ . '/../exceptions/ValidationException.php';
+require_once __DIR__ . '/../exceptions/NotFoundException.php';
 
+use App\Exceptions\DatabaseException;
+use App\Exceptions\ValidationException;
+use App\Exceptions\NotFoundException;
 
 class PortModel
 {
@@ -15,7 +21,7 @@ class PortModel
     {
         try {
             if (!isset($data['server_id'])) {
-                throw new Exception("Server ID is required.");
+                throw new ValidationException("Server ID is required", ['field' => 'server_id']);
             }
 
             $ports = [];
@@ -38,7 +44,7 @@ class PortModel
                     'is_open' => $data['is_open'] ?? 0
                 ]];
             } else {
-                throw new Exception("Port data is missing or invalid.");
+                throw new ValidationException("Port data is missing or invalid", ['data' => $data]);
             }
 
             $stmt = $this->pdo->prepare("INSERT INTO server_ports (server_id, port_number, is_open) VALUES (:server_id, :port_number, :is_open)");
@@ -55,17 +61,9 @@ class PortModel
 
             return ["message" => "Port(s) added successfully"];
         } catch (PDOException $e) {
-            error_log("insertPort error: " . $e->getMessage());
-            http_response_code(500);
-            return ["error" => "Database error: Something went wrong -- " . $e->getMessage()];
-        } catch (Exception $e) {
-            error_log("insertPort error: " . $e->getMessage());
-            http_response_code(400);
-            return ["error" => $e->getMessage()];
+            throw new DatabaseException("Failed to insert port(s)", ['details' => $e->getMessage()]);
         }
     }
-
-
 
     public function deletePorts($data)
     {
@@ -77,7 +75,7 @@ class PortModel
             } else if (isset($data['portId'])) {
                 $ports = [$data['portId']];
             } else {
-                throw new Exception("Port IDs are missing.");
+                throw new ValidationException("Port IDs are missing", ['data' => $data]);
             }
 
             $stmt = $this->pdo->prepare("DELETE FROM server_ports WHERE id = :id");
@@ -88,13 +86,7 @@ class PortModel
 
             return ["message" => "Port(s) deleted successfully"];
         } catch (PDOException $e) {
-            error_log("deletePorts error: " . $e->getMessage());
-            http_response_code(500);
-            return ["error" => "Database error: Something went wrong"];
-        } catch (Exception $e) {
-            error_log("deletePorts error: " . $e->getMessage());
-            http_response_code(400);
-            return ["error" => $e->getMessage()];
+            throw new DatabaseException("Failed to delete port(s)", ['details' => $e->getMessage()]);
         }
     }
 
@@ -105,7 +97,7 @@ class PortModel
                 !isset($data['serverId']) || !is_numeric($data['serverId']) ||
                 !isset($data['ports']) || !is_array($data['ports']) || empty($data['ports'])
             ) {
-                throw new Exception("Invalid server ID or ports array.");
+                throw new ValidationException("Invalid server ID or ports array", ['data' => $data]);
             }
 
             $serverId = (int)$data['serverId'];
@@ -120,17 +112,9 @@ class PortModel
 
             return ["message" => "Specified ports deleted successfully"];
         } catch (PDOException $e) {
-            error_log("deletePortsByServerId error: " . $e->getMessage());
-            http_response_code(500);
-            return ["error" => "Database error: Something went wrong"];
-        } catch (Exception $e) {
-            error_log("deletePortsByServerId error: " . $e->getMessage());
-            http_response_code(400);
-            return ["error" => $e->getMessage()];
+            throw new DatabaseException("Failed to delete ports by server ID", ['details' => $e->getMessage()]);
         }
     }
-
-
 
     public function getPortsByServer(int $serverId)
     {
@@ -140,8 +124,7 @@ class PortModel
             $ports = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return $ports;
         } catch (PDOException $e) {
-            error_log("getPortsByServer error: " . $e->getMessage());
-            return ["error" => "Database error: Unable to fetch ports"];
+            throw new DatabaseException("Failed to fetch ports by server", ['details' => $e->getMessage()]);
         }
     }
 
@@ -152,13 +135,15 @@ class PortModel
             $stmt->execute(['id' => $portId]);
             $port = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            return $port ?: null;
+            if (!$port) {
+                throw new NotFoundException("Port not found", ['id' => $portId]);
+            }
+
+            return $port;
         } catch (PDOException $e) {
-            error_log("getPortById error: " . $e->getMessage());
-            return null;
+            throw new DatabaseException("Failed to fetch port by ID", ['details' => $e->getMessage()]);
         }
     }
-
 
     public function updatePortStatus(int $portId, int $isOpen)
     {
@@ -169,15 +154,13 @@ class PortModel
                 ':id' => $portId
             ]);
 
+            if ($stmt->rowCount() === 0) {
+                throw new NotFoundException("Port not found", ['id' => $portId]);
+            }
+
             return ["message" => "Port status updated successfully"];
         } catch (PDOException $e) {
-            error_log("updatePortStatus error: " . $e->getMessage());
-            http_response_code(500);
-            return ["error" => "Database error: " . $e->getMessage()];
-        } catch (Exception $e) {
-            error_log("updatePortStatus error: " . $e->getMessage());
-            http_response_code(500);
-            return ["error" => "Unexpected error: " . $e->getMessage()];
+            throw new DatabaseException("Failed to update port status", ['details' => $e->getMessage()]);
         }
     }
 }

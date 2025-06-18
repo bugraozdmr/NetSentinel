@@ -2,6 +2,13 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../services/PortService.php';
 require_once __DIR__ . '/../validators/PortValidator.php';
+require_once __DIR__ . '/../exceptions/ValidationException.php';
+require_once __DIR__ . '/../exceptions/NotFoundException.php';
+require_once __DIR__ . '/../exceptions/DatabaseException.php';
+
+use App\Exceptions\ValidationException;
+use App\Exceptions\NotFoundException;
+use App\Exceptions\DatabaseException;
 
 header('Content-Type: application/json');
 
@@ -17,36 +24,26 @@ class PortController
     public function getPorts($serverId)
     {
         if (empty($serverId) || !is_numeric($serverId)) {
-            http_response_code(400);
-            echo json_encode(["error" => "Invalid server ID"]);
-            return;
+            throw new ValidationException("Invalid server ID", ['server_id' => $serverId]);
         }
 
         $ports = $this->portService->getPortsByServer((int)$serverId);
 
         if (isset($ports['error'])) {
-            http_response_code(500);
-            echo json_encode($ports);
-            return;
+            throw new DatabaseException("Failed to fetch ports", ['details' => $ports['error']]);
         }
 
         if (isset($ports['not_found'])) {
-            http_response_code(404);
-            echo json_encode(["error" => "No ports found for the given server ID."]);
-            return;
+            throw new NotFoundException("No ports found for the given server ID", ['server_id' => $serverId]);
         }
 
-        http_response_code(200);
         echo json_encode(["ports" => $ports]);
     }
-
 
     public function addPort($data)
     {
         if (empty($data['server_id']) || !is_numeric($data['server_id'])) {
-            http_response_code(400);
-            echo json_encode(["error" => "Server ID is required and must be numeric."]);
-            return;
+            throw new ValidationException("Server ID is required and must be numeric", ['field' => 'server_id']);
         }
 
         if (isset($data['ports']) && is_array($data['ports'])) {
@@ -59,12 +56,7 @@ class PortController
 
                 $errors = PortValidator::validateInsert($portData);
                 if (!empty($errors)) {
-                    http_response_code(422);
-                    echo json_encode([
-                        "error" => "Validation failed for port index $index",
-                        "details" => $errors
-                    ]);
-                    return;
+                    throw new ValidationException("Validation failed for port index $index", $errors);
                 }
 
                 $data['ports'][$index] = $portData;
@@ -72,35 +64,25 @@ class PortController
         } else {
             $errors = PortValidator::validateInsert($data);
             if (!empty($errors)) {
-                http_response_code(422);
-                echo json_encode([
-                    "error" => "Validation failed",
-                    "details" => $errors
-                ]);
-                return;
+                throw new ValidationException("Validation failed", $errors);
             }
         }
 
         $result = $this->portService->addPorts($data);
 
         if (isset($result['error'])) {
-            http_response_code(500);
-            echo json_encode($result);
-            return;
+            throw new DatabaseException("Failed to add ports", ['details' => $result['error']]);
         }
 
         echo json_encode($result);
     }
-
 
     public function deletePort()
     {
         $input = json_decode(file_get_contents('php://input'), true);
 
         if (!$input) {
-            http_response_code(400);
-            echo json_encode(["error" => "Invalid input."]);
-            return;
+            throw new ValidationException("Invalid input", ['input' => $input]);
         }
 
         $portIds = [];
@@ -110,28 +92,23 @@ class PortController
         } elseif (isset($input['ports'])) {
             $portIds = $input['ports'];
         } else {
-            http_response_code(400);
-            echo json_encode(["error" => "No port id(s) provided."]);
-            return;
+            throw new ValidationException("No port id(s) provided", ['input' => $input]);
         }
 
         if (!is_array($portIds)) {
             $portIds = [$portIds];
         }
+        
         foreach ($portIds as $portId) {
             if (!is_numeric($portId)) {
-                http_response_code(400);
-                echo json_encode(["error" => "Invalid port id(s)."]);
-                return;
+                throw new ValidationException("Invalid port id(s)", ['port_ids' => $portIds]);
             }
         }
 
         $result = $this->portService->removePorts($portIds);
 
         if (isset($result['error'])) {
-            http_response_code(500);
-            echo json_encode($result);
-            return;
+            throw new DatabaseException("Failed to delete ports", ['details' => $result['error']]);
         }
 
         echo json_encode($result);
@@ -142,39 +119,29 @@ class PortController
         $input = json_decode(file_get_contents('php://input'), true);
 
         if (!$input) {
-            http_response_code(400);
-            echo json_encode(["error" => "Invalid input."]);
-            return;
+            throw new ValidationException("Invalid input", ['input' => $input]);
         }
 
         if (!isset($input['portId']) || !isset($input['is_open'])) {
-            http_response_code(400);
-            echo json_encode(["error" => "Missing portId or is_open in input."]);
-            return;
+            throw new ValidationException("Missing portId or is_open in input", ['input' => $input]);
         }
 
         $portId = $input['portId'];
         $isOpen = $input['is_open'];
 
         if (!is_numeric($portId) || !in_array($isOpen, [0, 1], true)) {
-            http_response_code(400);
-            echo json_encode(["error" => "Invalid portId or is_open value."]);
-            return;
+            throw new ValidationException("Invalid portId or is_open value", [
+                'port_id' => $portId,
+                'is_open' => $isOpen
+            ]);
         }
 
-        try {
-            $result = $this->portService->updatePortStatus((int)$portId, (int)$isOpen);
+        $result = $this->portService->updatePortStatus((int)$portId, (int)$isOpen);
 
-            if (isset($result['error'])) {
-                http_response_code(500);
-                echo json_encode($result);
-                return;
-            }
-
-            echo json_encode($result);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(["error" => "Unexpected error: " . $e->getMessage()]);
+        if (isset($result['error'])) {
+            throw new DatabaseException("Failed to update port status", ['details' => $result['error']]);
         }
+
+        echo json_encode($result);
     }
 }

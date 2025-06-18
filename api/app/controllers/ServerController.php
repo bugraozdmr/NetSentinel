@@ -2,7 +2,11 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../services/ServerService.php';
 require_once __DIR__ . '/../validators/ServerValidator.php';
+require_once __DIR__ . '/../exceptions/ValidationException.php';
+require_once __DIR__ . '/../exceptions/NotFoundException.php';
 
+use App\Exceptions\ValidationException;
+use App\Exceptions\NotFoundException;
 
 header('Content-Type: application/json');
 
@@ -25,11 +29,7 @@ class ServerController
         $server = $this->serverService->getServerByIdWithStatus($id);
 
         if (!$server || isset($server['error'])) {
-            http_response_code(404);
-            echo json_encode([
-                "message" => $server['error'] ?? "Sunucu bulunamadı"
-            ]);
-            return;
+            throw new NotFoundException("Server not found", ['id' => $id]);
         }
 
         echo json_encode([
@@ -37,14 +37,11 @@ class ServerController
         ]);
     }
 
-
     public function addServer($data)
     {
         $errors = ServerValidator::validateInsert($data);
         if (!empty($errors)) {
-            http_response_code(400);
-            echo json_encode(["errors" => $errors]);
-            return;
+            throw new ValidationException("Validation failed", $errors);
         }
 
         echo json_encode($this->serverService->addServer($data));
@@ -53,48 +50,39 @@ class ServerController
     public function editServer($id, $data)
     {
         if (!$id) {
-            http_response_code(400);
-            echo json_encode(["error" => "Server ID is required"]);
-            return;
+            throw new ValidationException("Server ID is required", ['field' => 'id']);
         }
 
         if (!is_array($data)) {
-            http_response_code(400);
-            echo json_encode(["error" => "Invalid data"]);
-            return;
+            throw new ValidationException("Invalid data format", ['data' => $data]);
         }
 
         $errors = ServerValidator::validateUpdate($data);
         if (!empty($errors)) {
-            http_response_code(400);
-            echo json_encode(["errors" => $errors]);
-            return;
+            throw new ValidationException("Validation failed", $errors);
         }
 
         $response = $this->serverService->editServer((int)$id, $data);
 
         if (isset($response['error'])) {
-            http_response_code(400);
+            throw new NotFoundException("Server not found", ['id' => $id]);
         }
+        
         echo json_encode($response);
     }
-
 
     public function deleteServer($serverId)
     {
         if (!$serverId) {
-            http_response_code(400);
-            echo json_encode(["error" => "Server ID is required"]);
-            return;
+            throw new ValidationException("Server ID is required", ['field' => 'server_id']);
         }
+        
         echo json_encode($this->serverService->deleteServer($serverId));
     }
-
 
     public function checkAll(): void
     {
         $this->serverService->checkAllStatuses();
-
         echo json_encode(['message' => 'Tüm sunucular kontrol edildi.']);
     }
 }

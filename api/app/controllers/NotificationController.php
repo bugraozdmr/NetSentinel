@@ -2,6 +2,13 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../services/NotificationService.php';
 require_once __DIR__ . '/../validators/NotificationValidator.php';
+require_once __DIR__ . '/../exceptions/ValidationException.php';
+require_once __DIR__ . '/../exceptions/NotFoundException.php';
+require_once __DIR__ . '/../exceptions/DatabaseException.php';
+
+use App\Exceptions\ValidationException;
+use App\Exceptions\NotFoundException;
+use App\Exceptions\DatabaseException;
 
 header('Content-Type: application/json');
 
@@ -21,11 +28,8 @@ class NotificationController
 
     public function getNotificationsByServerId($id)
     {
-        // TODO : Server Check
         if (!ctype_digit($id)) {
-            http_response_code(400);
-            echo json_encode(["error" => "Invalid server ID"]);
-            return;
+            throw new ValidationException("Invalid server ID", ['server_id' => $id]);
         }
 
         $notifications = $this->notificationService->getNotificationsByServerId((int)$id);
@@ -37,9 +41,7 @@ class NotificationController
     {
         $errors = NotificationValidator::validateInsert($data);
         if (!empty($errors)) {
-            http_response_code(400);
-            echo json_encode(["errors" => $errors]);
-            return;
+            throw new ValidationException("Validation failed", $errors);
         }
 
         echo json_encode($this->notificationService->addNotification($data));
@@ -48,15 +50,11 @@ class NotificationController
     public function deleteNotification($id)
     {
         if (!$id) {
-            http_response_code(400);
-            echo json_encode(["error" => "Notification id is required"]);
-            return;
+            throw new ValidationException("Notification id is required", ['field' => 'id']);
         }
 
         if (!ctype_digit($id)) {
-            http_response_code(400);
-            echo json_encode(["error" => "Invalid server ID"]);
-            return;
+            throw new ValidationException("Invalid notification ID", ['id' => $id]);
         }
 
         echo json_encode($this->notificationService->removeNotification($id));
@@ -65,9 +63,7 @@ class NotificationController
     public function notificationCountAction($serverId)
     {
         if (!empty($serverId) && !ctype_digit($serverId) && ($serverId != 'all')) {
-            http_response_code(400);
-            echo json_encode(["error" => "Invalid server ID"]);
-            return;
+            throw new ValidationException("Invalid server ID", ['server_id' => $serverId]);
         }
 
         if ($serverId == 'all') {
