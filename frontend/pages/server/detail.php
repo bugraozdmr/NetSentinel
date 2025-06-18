@@ -1,68 +1,125 @@
-<div id="loading-detail" class="text-center text-lg font-semibold text-slate-600 py-6 animate-pulse">
-    <svg class="mx-auto mb-2 w-6 h-6 animate-spin text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+<div id="loading-detail" class="text-center text-lg font-semibold text-slate-400 py-6 animate-pulse">
+    <svg class="mx-auto mb-2 w-7 h-7 animate-spin text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
     </svg>
     Yükleniyor...
 </div>
 
-
-<div id="serverDetail" class="max-w-5xl mx-auto bg-white shadow-2xl rounded-3xl p-8 space-y-10 border border-slate-200">
+<div id="serverDetail" class="max-w-5xl mx-auto bg-slate-900/80 shadow-2xl rounded-3xl p-6 md:p-10 space-y-10 border border-slate-800 backdrop-blur-md my-8 md:my-12">
     <div class="mb-6 text-center">
-        <h1 class="text-4xl font-extrabold text-slate-800 tracking-tight">🌐 Sunucu Detayı</h1>
-        <p class="text-slate-500 text-lg mt-2">Sunucu hakkında ayrıntılı bilgiler</p>
+        <h1 class="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-blue-400 to-blue-200 bg-clip-text text-transparent tracking-tight flex items-center justify-center gap-2">
+            <span class="text-2xl md:text-3xl">🌐</span> Sunucu Detayı
+        </h1>
+        <p class="text-slate-400 text-lg mt-2">Sunucu hakkında ayrıntılı bilgiler</p>
     </div>
-
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-        <div class="bg-slate-50 p-4 rounded-xl shadow-inner border">
-            <p class="text-sm text-slate-500">İsim</p>
-            <p id="name" class="text-lg font-semibold text-slate-800 mt-1"></p>
+        <div class="bg-slate-800/80 p-5 rounded-2xl shadow-lg border border-slate-700 flex flex-col items-start">
+            <div class="flex items-center gap-2 mb-1 text-blue-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804"/></svg> <span class="text-xs text-slate-400">İsim</span></div>
+            <p id="name" class="text-lg font-semibold text-slate-100 mt-1"></p>
         </div>
-
-        <div class="bg-slate-50 p-4 rounded-xl shadow-inner border">
-            <p class="text-sm text-slate-500">IP Adresi</p>
-            <p id="ip" class="text-lg font-semibold text-slate-800 mt-1"></p>
+        <div class="bg-slate-800/80 p-5 rounded-2xl shadow-lg border border-slate-700 flex flex-col items-start">
+            <div class="flex items-center gap-2 mb-1 text-blue-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M2 12h20"/></svg> <span class="text-xs text-slate-400">IP Adresi</span></div>
+            <p id="ip" class="text-lg font-semibold text-slate-100 mt-1"></p>
         </div>
-        <div class="bg-slate-50 p-4 rounded-xl shadow-inner border">
-            <p class="text-sm text-slate-500">Konum</p>
-            <p id="location" class="text-lg font-semibold text-slate-800 mt-1"></p>
+        <div class="bg-slate-800/80 p-5 rounded-2xl shadow-lg border border-slate-700 flex flex-col items-start">
+            <div class="flex items-center gap-2 mb-1 text-blue-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 12.414a4 4 0 10-1.414 1.414l4.243 4.243a1 1 0 001.414-1.414z"/></svg> <span class="text-xs text-slate-400">Konum</span></div>
+            <p id="location" class="text-lg font-semibold text-slate-100 mt-1"></p>
         </div>
-        <div class="bg-slate-50 p-4 rounded-xl shadow-inner border">
-            <p class="text-sm text-slate-500">Atanmış ID</p>
-            <p id="assigned_id" class="text-lg font-semibold text-slate-800 mt-1"></p>
+        <div class="bg-slate-800/80 p-5 rounded-2xl shadow-lg border border-slate-700 flex flex-col items-start">
+            <div class="flex items-center gap-2 mb-1 text-blue-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2a4 4 0 118 0v2"/></svg> <span class="text-xs text-slate-400">Atanmış ID</span></div>
+            <p id="assigned_id" class="text-lg font-semibold text-slate-100 mt-1"></p>
         </div>
-        <div class="bg-slate-50 p-4 rounded-xl shadow-inner border">
-            <p class="text-sm text-slate-500">Durum</p>
-            <p id="is_active" class="text-lg font-semibold text-slate-800 mt-1"></p>
+        <div class="bg-slate-800/80 p-5 rounded-2xl shadow-lg border border-slate-700 flex flex-col items-start">
+            <div class="flex items-center gap-2 mb-1 text-blue-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3"/></svg> <span class="text-xs text-slate-400">Durum</span></div>
+            <p id="is_active" class="text-lg font-semibold text-slate-100 mt-1"></p>
         </div>
-        <div class="bg-slate-50 p-4 rounded-xl shadow-inner border">
-            <p class="text-sm text-slate-500">Son Kontrol</p>
-            <p id="last_check_at" class="text-lg font-semibold text-slate-800 mt-1"></p>
+        <div class="bg-slate-800/80 p-5 rounded-2xl shadow-lg border border-slate-700 flex flex-col items-start">
+            <div class="flex items-center gap-2 mb-1 text-blue-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3"/></svg> <span class="text-xs text-slate-400">Son Kontrol</span></div>
+            <p id="last_check_at" class="text-lg font-semibold text-slate-100 mt-1"></p>
         </div>
     </div>
 
-    <div class="bg-slate-50 p-4 rounded-2xl shadow-inner border border-slate-200">
-        <h2 class="text-xl font-semibold text-slate-800 mb-3">Son Kontroller</h2>
-        <div id="checkList" class="flex flex-wrap gap-2"></div>
-    </div>
+    <!-- SON KONTROLLER (YENİ TASARIM) -->
+    <section class="bg-slate-900/90 rounded-2xl shadow-2xl border border-blue-900 px-6 py-8 my-8">
+      <h2 class="flex items-center gap-3 text-2xl font-extrabold bg-gradient-to-r from-blue-400 to-blue-200 bg-clip-text text-transparent mb-6">
+        <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2a4 4 0 118 0v2"/></svg>
+        Son Kontroller
+      </h2>
+      <div id="checkList" class="flex flex-wrap gap-6 justify-center">
+        <!-- Örnek kart, JS ile dinamik doldurulacak -->
+        <!--
+        <div class="relative bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-700 rounded-xl shadow-lg px-6 py-4 min-w-[180px] max-w-xs flex flex-col items-center hover:scale-105 transition-transform group">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></span>
+            <span class="text-base font-bold text-green-400">Başarılı</span>
+          </div>
+          <div class="text-xs text-slate-300 mb-1">18.06.2025 12:11:12</div>
+          <div class="text-xs text-slate-400">Ping: 42ms</div>
+          <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
+            <span class="bg-slate-700 text-xs text-white rounded px-2 py-1 shadow">Detay</span>
+          </div>
+        </div>
+        <div class="relative bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-700 rounded-xl shadow-lg px-6 py-4 min-w-[180px] max-w-xs flex flex-col items-center hover:scale-105 transition-transform group">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
+            <span class="text-base font-bold text-red-400">Hata</span>
+          </div>
+          <div class="text-xs text-slate-300 mb-1">18.06.2025 12:10:12</div>
+          <div class="text-xs text-slate-400">Timeout</div>
+          <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
+            <span class="bg-slate-700 text-xs text-white rounded px-2 py-1 shadow">Detay</span>
+          </div>
+        </div>
+        -->
+      </div>
+    </section>
 
+    <!-- PORT DURUMU (YENİ TASARIM) -->
+    <section class="bg-slate-900/90 rounded-2xl shadow-2xl border border-blue-900 px-6 py-8 my-8">
+      <h2 class="flex items-center gap-3 text-2xl font-extrabold bg-gradient-to-r from-blue-400 to-blue-200 bg-clip-text text-transparent mb-6">
+        <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M2 12h20"/></svg>
+        Port Durumu
+      </h2>
+      <div id="ports" class="flex flex-wrap gap-6 justify-center">
+        <!-- Örnek port kartı, JS ile dinamik doldurulacak -->
+        <!--
+        <div class="relative bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-700 rounded-xl shadow-lg px-6 py-4 min-w-[120px] max-w-xs flex flex-col items-center hover:scale-105 transition-transform group">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></span>
+            <span class="text-base font-bold text-green-400">Açık</span>
+          </div>
+          <div class="text-lg font-mono text-slate-100">22</div>
+          <div class="text-xs text-slate-400">SSH</div>
+          <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
+            <span class="bg-slate-700 text-xs text-white rounded px-2 py-1 shadow">Port Detayı</span>
+          </div>
+        </div>
+        <div class="relative bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-700 rounded-xl shadow-lg px-6 py-4 min-w-[120px] max-w-xs flex flex-col items-center hover:scale-105 transition-transform group">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
+            <span class="text-base font-bold text-red-400">Kapalı</span>
+          </div>
+          <div class="text-lg font-mono text-slate-100">25</div>
+          <div class="text-xs text-slate-400">SMTP</div>
+          <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
+            <span class="bg-slate-700 text-xs text-white rounded px-2 py-1 shadow">Port Detayı</span>
+          </div>
+        </div>
+        -->
+      </div>
+    </section>
 
-    <div class="bg-slate-50 text-slate-800 rounded-2xl px-4 py-2 shadow-md border border-slate-200">
-        <h2 class="text-xl font-semibold text-slate-800 mb-3">Port Durumu</h2>
-        <div id="ports" class="grid grid-cols-2 sm:grid-cols-4 gap-4 justify-items-center"></div>
-    </div>
-
-
-    <div id="chartContainer" class="bg-slate-50 p-4 rounded-2xl shadow-inner border border-slate-200 max-w-xl mx-auto">
-        <h2 class="text-xl font-semibold text-slate-800 mb-3">Ping Süreleri (ms)</h2>
+    <div id="chartContainer" class="bg-slate-800/80 p-5 rounded-2xl shadow-lg border border-slate-700 max-w-xl mx-auto">
+        <h2 class="text-xl font-semibold bg-gradient-to-r from-blue-400 to-blue-200 bg-clip-text text-transparent mb-3 flex items-center gap-2"><svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3"/></svg> Ping Süreleri (ms)</h2>
         <canvas id="pingChart" style="max-height: 300px;"></canvas>
     </div>
 
-    <div id="notifications" class="bg-slate-50 p-4 rounded-2xl shadow-inner border border-slate-200 max-w-5xl mx-auto mt-10 hidden">
-        <h2 class="text-xl font-semibold text-slate-800 mb-3">Bildirimler</h2>
-        <div id="notifications-loading" class="text-center text-lg font-semibold text-slate-600 py-6 animate-pulse">
-            <svg class="mx-auto mb-2 w-6 h-6 animate-spin text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <div id="notifications" class="bg-slate-800/80 p-5 rounded-2xl shadow-lg border border-slate-700 max-w-5xl mx-auto mt-10 hidden">
+        <h2 class="text-xl font-semibold bg-gradient-to-r from-blue-400 to-blue-200 bg-clip-text text-transparent mb-3 flex items-center gap-2"><svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z"/></svg> Bildirimler</h2>
+        <div id="notifications-loading" class="text-center text-lg font-semibold text-slate-400 py-6 animate-pulse">
+            <svg class="mx-auto mb-2 w-7 h-7 animate-spin text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
             </svg>
@@ -70,6 +127,4 @@
         </div>
         <ul id="notifications-list" class="space-y-3"></ul>
     </div>
-
-
 </div>

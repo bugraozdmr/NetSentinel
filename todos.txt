@@ -31,3 +31,6 @@ api ve assets için giriyor
 
 -- kullanıcı buraya erişebilir sadece api yolunu düzenle yeter
 
+-- kritik sunucu down olursa kırmızı göster
+
+-- mesela gün boyunca kapalı ise bu bildirim gönder kapalıydı bu ne oluyor diye uzun süre kapalı kalanlar için

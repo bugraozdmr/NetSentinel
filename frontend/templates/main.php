@@ -13,10 +13,10 @@
 </head>
 
 <body>
-    <div class="flex flex-col min-h-screen bg-gray-100">
+    <div class="flex flex-col min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <?php include __DIR__ . '/../components/navbar.php'; ?>
 
-        <main class="flex-1 p-6">
+        <main class="flex-1">
             <?= $content ?>
         </main>
 

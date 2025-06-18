@@ -1,52 +1,51 @@
-<div class="max-w-6xl mx-auto mt-8 p-8 bg-white shadow-lg rounded-lg">
-    <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
-        <div>
-            <h2 class="text-2xl font-semibold text-center sm:text-left mb-1">Sunucu Durumları</h2>
-            <p class="text-slate-500 text-sm">Sunucu bilgilerini filtreleyin.</p>
+<div class="min-h-screen bg-slate-900 text-white p-8">
+    <!-- Özet Bar -->
+    <div class="flex flex-wrap gap-6 mb-8">
+        <div class="bg-slate-800 rounded-xl px-8 py-4 text-center flex-1">
+            <div class="text-2xl font-bold" id="totalServers">0</div>
+            <div class="text-slate-400 text-sm">Toplam Sunucu</div>
         </div>
-        <div class="mt-3 sm:mt-0 w-full sm:w-auto max-w-xs relative">
+        <div class="bg-green-800 rounded-xl px-8 py-4 text-center flex-1">
+            <div class="text-2xl font-bold" id="activeServers">0</div>
+            <div class="text-green-200 text-sm">Aktif</div>
+        </div>
+        <div class="bg-red-800 rounded-xl px-8 py-4 text-center flex-1">
+            <div class="text-2xl font-bold" id="downServers">0</div>
+            <div class="text-red-200 text-sm">Kapalı</div>
+        </div>
+        <div class="bg-slate-800 rounded-xl px-8 py-4 text-center flex-1">
+            <div class="text-lg" id="lastUpdate">Son güncelleme: --:--:--</div>
+        </div>
+    </div>
+    <!-- Lokasyon Seçimi ve Arama -->
+    <div class="flex flex-col md:flex-row gap-4 mb-8 justify-center items-center">
+        <div class="flex gap-4">
+            <button id="locationAllBtn" class="location-filter-btn px-5 py-2 rounded-lg font-semibold bg-blue-600 text-white shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition">Tümü</button>
+            <button id="locationMarsBtn" class="location-filter-btn px-5 py-2 rounded-lg font-semibold bg-slate-800 text-blue-300 shadow hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition">Mars</button>
+            <button id="locationHetznerBtn" class="location-filter-btn px-5 py-2 rounded-lg font-semibold bg-slate-800 text-blue-300 shadow hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition">Hetzner</button>
+        </div>
+        <div class="w-full md:w-72 relative">
             <input
                 type="text"
                 id="searchInput"
-                class="w-full pl-3 pr-10 h-10 text-sm border border-slate-300 rounded-md placeholder:text-slate-400 text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-400 focus:border-slate-400 transition-shadow shadow-sm"
-                placeholder="Ara" />
+                class="w-full pl-3 pr-10 h-10 text-sm border border-slate-700 rounded-md placeholder:text-slate-400 text-slate-100 bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-shadow shadow-sm"
+                placeholder="Sunucu ara..." />
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"
                 class="w-5 h-5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                 <path d="M 21 3 C 11.601563 3 4 10.601563 4 20 C 4 29.398438 11.601563 37 21 37 C 24.355469 37 27.460938 36.015625 30.09375 34.34375 L 42.375 46.625 L 46.625 42.375 L 34.5 30.28125 C 36.679688 27.421875 38 23.878906 38 20 C 38 10.601563 30.398438 3 21 3 Z M 21 7 C 28.199219 7 34 12.800781 34 20 C 34 27.199219 28.199219 33 21 33 C 13.800781 33 8 27.199219 8 20 C 8 12.800781 13.800781 7 21 7 Z"></path>
             </svg>
         </div>
     </div>
-
-    <!-- Tablo -->
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse min-w-[600px]">
-            <thead class="bg-slate-100">
-                <tr>
-                    <th class="p-4 text-left text-sm font-semibold text-slate-600">IP</th>
-                    <th class="p-4 text-left text-sm font-semibold text-slate-600">Ad</th>
-                    <th class="p-4 text-left text-sm font-semibold text-slate-600">ID</th>
-                    <th class="p-4 text-left text-sm font-semibold text-slate-600">Konum</th>
-                    <th class="p-4 text-left text-sm font-semibold text-slate-600">Durum</th>
-                    <th class="p-4 text-left text-sm font-semibold text-slate-600">Son Kontrol</th>
-                    <th class="p-4 text-left text-sm font-semibold text-slate-600">Son Kontroller</th>
-                    <th class="p-4 text-left text-sm font-semibold text-slate-600">İşlemler</th>
-                </tr>
-            </thead>
-            <tbody id="serverTableBody">
-                <!-- Dinamik -->
-            </tbody>
-        </table>
-
-        <div id="loading" class="flex justify-center my-6 hidden">
-            <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-blue-500"></div>
-        </div>
-
-        <div id="error" class="text-center text-red-600 hidden mt-4">
-            Sunucular alınırken bir hata oluştu.
-        </div>
+    <!-- Kart Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8" id="serverPanelGrid">
+        <!-- Dinamik kartlar buraya gelecek -->
     </div>
-
-    <!-- Modal -->
+    <div id="loading" class="flex justify-center my-6 hidden">
+        <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-blue-500"></div>
+    </div>
+    <div id="error" class="text-center text-red-600 hidden mt-4">
+        Sunucular alınırken bir hata oluştu.
+    </div>
     <div id="deleteModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-500/75">
         <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
@@ -75,5 +74,4 @@
             </div>
         </div>
     </div>
-
 </div>

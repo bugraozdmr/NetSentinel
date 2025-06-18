@@ -23,7 +23,7 @@ $(document).ready(function () {
   }
 
   //* HOME PAGE
-  const $tbody = $("#serverTableBody");
+  const $panelGrid = $("#serverPanelGrid");
   const $search = $("#searchInput");
   const $loading = $("#loading");
   const $error = $("#error");
@@ -40,10 +40,8 @@ $(document).ready(function () {
 
   function renderStatusBars(json) {
     let checks = [];
-
     try {
       const parsed = JSON.parse(json);
-
       if (Array.isArray(parsed)) {
         checks = parsed;
       } else {
@@ -52,23 +50,18 @@ $(document).ready(function () {
     } catch (e) {
       checks = [];
     }
-
     const maxChecks = 10;
-
     if (!Array.isArray(checks)) {
       checks = [];
     }
-
     const emptyCount = maxChecks - checks.length;
     const normalized = [
       ...Array(emptyCount).fill(null),
       ...checks.slice(-maxChecks),
     ];
-
-    const bars = normalized.map((check) => {
-      let color = "bg-gray-300";
+    const bars = normalized.map((check, idx) => {
+      let color = "bg-gray-700";
       let tooltip = "Henüz kontrol edilmedi";
-
       if (check && typeof check === "object" && "status" in check) {
         if (check.status === 1) {
           color = "bg-green-500";
@@ -78,123 +71,167 @@ $(document).ready(function () {
           tooltip = check.time || "Tarih yok";
         }
       }
-
       return `
-      <div class="group relative cursor-default">
-        <span class="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 text-white text-[10px] px-1 py-[1px] opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none select-none">
-          ${tooltip}
-        </span>
-        <div class="w-3 h-5 ${color} rounded-sm group-hover:-translate-y-[2px] transition-transform"></div>
-      </div>
-    `;
+        <div class="group relative cursor-default overflow-visible">
+          <span class="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 text-white text-[10px] px-1 py-[1px] opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-auto select-none shadow-lg">
+            ${tooltip}
+          </span>
+          <div class="w-3 h-5 ${color} rounded-sm group-hover:-translate-y-[2px] transition-transform"></div>
+        </div>
+      `;
     });
-
-    return `<div class="flex gap-[2px] justify-end items-end">${bars.join(
-      ""
-    )}</div>`;
+    return `<div class="flex gap-[2px] justify-end items-end">${bars.join("")}</div>`;
   }
 
-  function renderTable(servers) {
-    $tbody.empty();
+  // Sunucu lokasyonuna göre ikon döndüren fonksiyon
+  function getServerIcon(location) {
+    if (!location) return defaultIcon();
+    const loc = location.toLowerCase();
+    if (loc === "mars") {
+      // Gerçekçi Türk bayrağı SVG (tam daire, taşma yok)
+      return `<span title="Mars (Türkiye)"><svg viewBox="0 0 64 64" class="w-10 h-10"><circle cx="32" cy="32" r="32" fill="#E30A17"/><circle cx="26" cy="32" r="12" fill="#fff"/><circle cx="29" cy="32" r="9" fill="#E30A17"/><path d="M38 32a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" fill="#fff"/></svg></span>`;
+    } else if (loc === "hetzner") {
+      // Hetzner: Sol yarı Almanya, sağ yarı ABD, tam daire maskeli SVG
+      return `<span title="Hetzner (DE/US)"><svg viewBox="0 0 64 64" class="w-10 h-10">
+        <defs>
+          <clipPath id="circleMask"><circle cx="32" cy="32" r="32"/></clipPath>
+        </defs>
+        <g clip-path="url(#circleMask)">
+          <!-- Sol: Almanya -->
+          <rect x="0" y="0" width="32" height="64" fill="#000"/>
+          <rect x="0" y="21" width="32" height="22" fill="#DD0000"/>
+          <rect x="0" y="43" width="32" height="21" fill="#FFCE00"/>
+          <!-- Sağ: ABD -->
+          <rect x="32" y="0" width="32" height="64" fill="#B22234"/>
+          <g>
+            <rect x="32" y="7" width="32" height="6" fill="#fff"/>
+            <rect x="32" y="19" width="32" height="6" fill="#fff"/>
+            <rect x="32" y="31" width="32" height="6" fill="#fff"/>
+            <rect x="32" y="43" width="32" height="6" fill="#fff"/>
+            <rect x="32" y="55" width="32" height="6" fill="#fff"/>
+          </g>
+          <rect x="32" y="0" width="18" height="25" fill="#3c3b6e"/>
+          <g fill="#fff">
+            <circle cx="35" cy="5" r="1.2"/><circle cx="41" cy="5" r="1.2"/><circle cx="47" cy="5" r="1.2"/>
+            <circle cx="35" cy="11" r="1.2"/><circle cx="41" cy="11" r="1.2"/><circle cx="47" cy="11" r="1.2"/>
+            <circle cx="35" cy="17" r="1.2"/><circle cx="41" cy="17" r="1.2"/><circle cx="47" cy="17" r="1.2"/>
+          </g>
+        </g>
+        <circle cx="32" cy="32" r="31" fill="none" stroke="#222" stroke-width="2"/>
+      </svg></span>`;
+    } else {
+      return defaultIcon();
+    }
+  }
 
+  function defaultIcon() {
+    return `<svg class="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 17.25h16.5M4.5 6.75h15v10.5a2.25 2.25 0 0 1-2.25 2.25h-10.5A2.25 2.25 0 0 1 4.5 17.25V6.75zm3 3.75h9"/></svg>`;
+  }
+
+  function renderPanel(servers) {
+    $panelGrid.empty();
     if (servers.length === 0) {
-      $tbody.append(`
-      <tr>
-        <td colspan="8" class="text-center py-6 text-slate-400">
+      $panelGrid.append(`
+        <div class="col-span-full text-center py-6 text-slate-400">
           Arama kriterlerine uygun sunucu bulunamadı.
-        </td>
-      </tr>`);
+        </div>`);
       return;
     }
-
     servers.forEach((server) => {
-      const statusText = server.is_active == 1 ? "Running" : "Passive";
-      const statusColor =
-        server.is_active == 1 ? "text-green-600" : "text-red-600";
+      const statusText = server.is_active == 1 ? "Aktif" : "Kapalı";
+      const statusColor = server.is_active == 1 ? "border-green-400" : "border-red-500";
+      const ledColor = server.is_active == 1 ? "bg-green-400" : "bg-red-500";
       const checks = renderStatusBars(server.last_checks);
-      const lastCheck = server.last_check_at
-        ? formatDate(server.last_check_at)
-        : "Henüz kontrol edilmedi";
-
+      const lastCheck = server.last_check_at ? formatDate(server.last_check_at) : "Henüz kontrol edilmedi";
       const ports = Array.isArray(server.ports)
         ? server.ports.map((port) => ({
-            number: port.port_number,
-            isOpen: port.is_open === 1 || port.is_open === true,
-          }))
+          number: port.port_number,
+          isOpen: port.is_open === 1 || port.is_open === true,
+        }))
         : [];
-
-      $tbody.append(`
-        <tr class="hover:bg-slate-50 border-b border-slate-200 transition-colors">
-          <td class="p-4 py-5 text-sm font-semibold text-slate-800">${
-            server.ip
-          }</td>
-          <td class="p-4 py-5 text-sm text-slate-500">${server.name}</td>
-          <td class="p-4 py-5 text-sm text-slate-500">${server.assigned_id}</td>
-          <td class="p-4 py-5 text-sm text-slate-500">${server.location}</td>
-          <td class="p-4 py-5 text-sm font-semibold ${statusColor}">${statusText}</td>
-          <td class="p-4 py-5 text-sm text-slate-500">${lastCheck}</td>
-          <td class="p-4 py-5 text-sm">
-            <div class="flex flex-row-reverse gap-1 justify-end">
-              ${checks}
+      const portPanelId = `port-panel-${server.id}`;
+      const toggleBtnId = `toggle-ports-${server.id}`;
+      $panelGrid.append(`
+        <div class="relative bg-gradient-to-br from-slate-800 to-slate-900 border-4 ${statusColor} rounded-2xl shadow-2xl p-8 flex flex-col items-center transition-all hover:scale-105 hover:shadow-blue-500/30">
+          <!-- Sunucu İkonu -->
+          <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 rounded-full p-3 shadow-lg border-4 border-slate-700">
+            ${getServerIcon(server.location)}
+          </div>
+          <!-- Durum LED'i -->
+          <span class="absolute top-4 right-4 w-3 h-3 rounded-full ${ledColor} border-2 border-white shadow"></span>
+          <!-- Atanmış ID -->
+          <div class="uppercase text-xs tracking-widest text-blue-400 mb-2 mt-8">${server.assigned_id || '-'}</div>
+          <!-- Sunucu Adı ve IP -->
+          <div class="text-2xl font-extrabold text-white mb-1">${server.name}</div>
+          <div class="text-sm text-blue-200 mb-4">${server.ip}</div>
+          <!-- Durum Badge -->
+          <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold border border-slate-600 bg-slate-700 text-white mb-2">${statusText}</span>
+          <!-- Son Kontroller Barı -->
+          <div class="flex items-center gap-2 mb-2 justify-center">${checks}</div>
+          <div class="text-xs text-slate-400 mb-2">Son kontrol: ${lastCheck}</div>
+          <!-- Portlar ve Aksiyonlar -->
+          <button type="button" id="${toggleBtnId}" aria-controls="${portPanelId}" aria-expanded="false" class="toggle-ports-btn mt-2 mb-2 px-6 py-2 rounded-full font-semibold bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-lg flex items-center gap-2 text-base transition-all duration-200 hover:from-blue-700 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15" />
+            </svg>
+            <span>Portları Göster</span>
+          </button>
+          <div id="${portPanelId}" class="ports-list hidden mt-2 transition-all">
+            <div class="flex flex-wrap gap-2 items-center justify-center">
+              ${ports.map(port => `
+                <span class="inline-flex items-center px-2 py-1 rounded-full border text-xs font-semibold mr-2 ${port.isOpen ? 'bg-green-50 text-green-700 border-green-300' : 'bg-red-50 text-red-700 border-red-300'}">
+                  ${port.number}
+                  <span class="ml-1 w-2 h-2 ${port.isOpen ? 'bg-green-500' : 'bg-red-500'} rounded-full"></span>
+                </span>
+              `).join('')}
             </div>
-          </td>
-          <td class="p-4 py-5 text-sm text-slate-600 flex gap-2 items-center">
-            <button
-              type="button"
-              title="Detayları Gör"
-              aria-label="Detayları Gör"
-              data-id="${server.id}"
-              class="detail-btn inline-flex items-center justify-center size-9 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition"
-            >
-              <i class="fa fa-eye"></i>
-            </button>
-
-            <button
-              type="button"
-              title="Düzenle"
-              aria-label="Düzenle"
-              data-id="${server.id}"
-              class="edit-btn inline-flex items-center justify-center size-9 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition"
-            >
-              <i class="fa fa-pen"></i>
-            </button>
-
-            <button
-              type="button"
-              title="Sil"
-              aria-label="Sil"
-              data-id="${server.id}"
-              class="inline-flex items-center justify-center size-9 rounded-full bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition delete-btn"
-            >
-              <i class="fas fa-trash-alt text-base"></i>
-            </button>
-          </td>
-        </tr>
-
-        <tr class="bg-gray-50 border-b border-gray-200">
-          <td colspan="8" class="p-3">
-            <div class="flex flex-wrap gap-2 items-center">
-              ${ports
-                .map(
-                  (port) => `
-                <div class="flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow-sm border ${
-                  port.isOpen
-                    ? "border-green-400 bg-green-50 text-green-700"
-                    : "border-red-400 bg-red-50 text-red-700"
-                }">
-                  <span class="font-semibold">${port.number}</span>
-                  <span class="w-3 h-3 rounded-full ${
-                    port.isOpen ? "bg-green-500" : "bg-red-500"
-                  }"></span>
-                </div>
-              `
-                )
-                .join("")}
-            </div>
-          </td>
-        </tr>
+          </div>
+          <div class="flex gap-2 mt-4">
+            <button type="button" title="Detayları Gör" aria-label="Detayları Gör" data-id="${server.id}" class="detail-btn inline-flex items-center justify-center size-9 rounded-full bg-slate-700 text-blue-300 hover:bg-blue-900 hover:text-white transition"><i class="fa fa-eye"></i></button>
+            <button type="button" title="Düzenle" aria-label="Düzenle" data-id="${server.id}" class="edit-btn inline-flex items-center justify-center size-9 rounded-full bg-slate-700 text-blue-300 hover:bg-blue-900 hover:text-white transition"><i class="fa fa-pen"></i></button>
+            <button type="button" title="Sil" aria-label="Sil" data-id="${server.id}" class="delete-btn inline-flex items-center justify-center size-9 rounded-full bg-slate-700 text-red-400 hover:bg-red-900 hover:text-white transition"><i class="fas fa-trash-alt text-base"></i></button>
+          </div>
+        </div>
       `);
     });
+    // Portları aç/kapa butonları için event handler
+    $(".toggle-ports-btn").off("click").on("click", function () {
+      const btn = $(this);
+      const portPanelId = btn.attr("aria-controls");
+      const $portPanel = $(`#${portPanelId}`);
+      const expanded = btn.attr("aria-expanded") === "true";
+      if (expanded) {
+        $portPanel.slideUp(200);
+        btn.attr("aria-expanded", "false");
+        btn.find("svg").html('<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15" />');
+        btn.find("span").text("Portları Göster");
+        btn.removeClass("from-green-600 to-green-400").addClass("from-blue-600 to-blue-400");
+      } else {
+        $portPanel.slideDown(200);
+        btn.attr("aria-expanded", "true");
+        btn.find("svg").html('<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />');
+        btn.find("span").text("Portları Gizle");
+        btn.removeClass("from-blue-600 to-blue-400").addClass("from-green-600 to-green-400");
+      }
+    });
+    // Delete butonları için event handler'ı tekrar ekle
+    $(".delete-btn").off("click").on("click", function () {
+      const id = $(this).data("id");
+      selectedServerId = id;
+      $deleteModal.removeClass("hidden");
+    });
+  }
+
+  function updateSummaryBar(servers) {
+    const total = servers.length;
+    const active = servers.filter(s => s.is_active == 1).length;
+    const down = total - active;
+    $("#totalServers").text(total);
+    $("#activeServers").text(active);
+    $("#downServers").text(down);
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString("tr-TR", { hour12: false });
+    $("#lastUpdate").text("Son güncelleme: " + timeStr);
   }
 
   function fetchServers() {
@@ -205,7 +242,8 @@ $(document).ready(function () {
       dataType: "json",
       success: function (data) {
         allServers = data.servers || [];
-        renderTable(allServers);
+        updateSummaryBar(allServers);
+        renderPanel(allServers);
       },
       error: function () {
         $error.removeClass("hidden");
@@ -223,7 +261,7 @@ $(document).ready(function () {
         val.toLowerCase().includes(keyword)
       )
     );
-    renderTable(filtered);
+    renderPanel(filtered);
   });
 
   // Silme butonlarına tıklama (delegation)
@@ -255,7 +293,7 @@ $(document).ready(function () {
         allServers = allServers.filter(
           (server) => server.id !== selectedServerId
         );
-        renderTable(allServers);
+        renderPanel(allServers);
         $deleteModal.addClass("hidden");
         selectedServerId = null;
       },
@@ -300,6 +338,7 @@ $(document).ready(function () {
         success: function () {
           $addForm[0].reset();
           $successMsg.removeClass("hidden");
+          window.location.href = `/${APP_NAME}/`;
         },
         error: function (xhr) {
           const msg = xhr.responseJSON?.message || "Sunucu eklenemedi.";
@@ -319,6 +358,24 @@ $(document).ready(function () {
     window.location.href = `/${APP_NAME}/server/updateServer/${id}`;
   });
 
+  function setLocationSafely(locationValue) {
+    const $select = $("#location");
+
+    const matched = $select.find(`option[value="${locationValue}"]`);
+
+    if (matched.length) {
+      $select.val(locationValue);
+    } else {
+      $select.append(
+        $("<option>", {
+          value: locationValue,
+          text: locationValue,
+          selected: true
+        })
+      );
+    }
+  }
+
   const $editFormWrapper = $("#editFormWrapper");
 
   if ($editFormWrapper.length) {
@@ -328,10 +385,10 @@ $(document).ready(function () {
       const $loading = $("#loading");
       const $editFormContainer = $("#editFormContainer");
       const $errorMsg = $(`
-      <div id="serverLoadError" class="max-w-xl mx-auto mt-16 px-6 py-10 bg-white rounded-2xl shadow-xl border border-red-300 text-center text-red-700 font-semibold text-xl">
-        Sunucu bilgisi alınamadı.
-      </div>
-    `);
+        <div id="serverLoadError" class="max-w-xl mx-auto mt-16 px-6 py-10 bg-white rounded-2xl shadow-xl border border-red-300 text-center text-red-700 font-semibold text-xl">
+          Sunucu bilgisi alınamadı.
+        </div>
+      `);
 
       $.ajax({
         url: `${API_BASE_URL}/server/${serverId}`,
@@ -343,7 +400,6 @@ $(document).ready(function () {
           $("#ip").val(server.ip);
           $("#name").val(server.name);
           $("#assigned_id").val(server.assigned_id);
-          $("#location").val(server.location);
 
           const activePorts = Array.isArray(server.ports)
             ? server.ports.map((p) => String(p.port_number))
@@ -351,12 +407,12 @@ $(document).ready(function () {
 
           $(".port-checkbox").each(function () {
             const portVal = $(this).val();
-            if (activePorts.includes(portVal)) {
-              $(this).prop("checked", true);
-            } else {
-              $(this).prop("checked", false);
-            }
+            $(this).prop("checked", activePorts.includes(portVal));
           });
+
+          setTimeout(() => {
+            setLocationSafely(server.location);
+          }, 100);
 
           $loading.addClass("hidden");
           $editFormContainer.removeClass("hidden");
@@ -368,6 +424,7 @@ $(document).ready(function () {
       });
     }
   }
+
 
   $("#updateServerForm").on("submit", function (e) {
     e.preventDefault();
@@ -439,8 +496,7 @@ $(document).ready(function () {
             const li = $(`
             <li class="border ${borderColor} rounded-lg p-4 mb-3 shadow-sm ${bgColor} hover:shadow-md transition-shadow duration-200 cursor-pointer">
               <p class="${fontWeight} ${textColor}">${notif.message}</p>
-              <time class="block text-xs text-gray-500 mt-1" datetime="${
-                notif.created_at
+              <time class="block text-xs text-gray-500 mt-1" datetime="${notif.created_at
               }">
                 ${new Date(notif.created_at).toLocaleString()}
               </time>
@@ -721,4 +777,27 @@ $(document).ready(function () {
   }
 
   updateNotificationCount();
+
+  // Lokasyon filtreleme
+  function setLocationFilter(selected) {
+    $(".location-filter-btn").removeClass("bg-blue-600 text-white").addClass("bg-slate-800 text-blue-300");
+    let filtered = allServers;
+    if (selected === "Tümü") {
+      $("#locationAllBtn").addClass("bg-blue-600 text-white").removeClass("bg-slate-800 text-blue-300");
+      filtered = allServers;
+    } else if (selected === "Mars") {
+      $("#locationMarsBtn").addClass("bg-blue-600 text-white").removeClass("bg-slate-800 text-blue-300");
+      filtered = allServers.filter(s => (s.location || '').toLowerCase().includes('mars'));
+    } else if (selected === "Hetzner") {
+      $("#locationHetznerBtn").addClass("bg-blue-600 text-white").removeClass("bg-slate-800 text-blue-300");
+      filtered = allServers.filter(s => (s.location || '').toLowerCase().includes('hetzner'));
+    }
+    updateSummaryBar(filtered);
+    renderPanel(filtered);
+  }
+  $(document).on("click", "#locationAllBtn", function () { setLocationFilter("Tümü"); });
+  $(document).on("click", "#locationMarsBtn", function () { setLocationFilter("Mars"); });
+  $(document).on("click", "#locationHetznerBtn", function () { setLocationFilter("Hetzner"); });
+  // Sayfa yüklenince varsayılan olarak 'Tümü' seçili olsun
+  setLocationFilter("Tümü");
 });

@@ -8,6 +8,7 @@ error_reporting(E_ALL);
 
 $baseUrl = '/netsentinel';
 $appName = 'NetSentinel';
+$version = '1.1.0';
 
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $routePath = str_replace($baseUrl . '/', '', $uri);
