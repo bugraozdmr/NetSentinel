@@ -28,10 +28,6 @@
             <p id="location" class="text-lg font-semibold text-slate-100 mt-1"></p>
         </div>
         <div class="bg-slate-800/80 p-5 rounded-2xl shadow-lg border border-slate-700 flex flex-col items-start">
-            <div class="flex items-center gap-2 mb-1 text-blue-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2a4 4 0 118 0v2"/></svg> <span class="text-xs text-slate-400">Atanmış ID</span></div>
-            <p id="assigned_id" class="text-lg font-semibold text-slate-100 mt-1"></p>
-        </div>
-        <div class="bg-slate-800/80 p-5 rounded-2xl shadow-lg border border-slate-700 flex flex-col items-start">
             <div class="flex items-center gap-2 mb-1 text-blue-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3"/></svg> <span class="text-xs text-slate-400">Durum</span></div>
             <p id="is_active" class="text-lg font-semibold text-slate-100 mt-1"></p>
         </div>
@@ -48,31 +44,6 @@
         Son Kontroller
       </h2>
       <div id="checkList" class="flex flex-wrap gap-6 justify-center">
-        <!-- Örnek kart, JS ile dinamik doldurulacak -->
-        <!--
-        <div class="relative bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-700 rounded-xl shadow-lg px-6 py-4 min-w-[180px] max-w-xs flex flex-col items-center hover:scale-105 transition-transform group">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></span>
-            <span class="text-base font-bold text-green-400">Başarılı</span>
-          </div>
-          <div class="text-xs text-slate-300 mb-1">18.06.2025 12:11:12</div>
-          <div class="text-xs text-slate-400">Ping: 42ms</div>
-          <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-            <span class="bg-slate-700 text-xs text-white rounded px-2 py-1 shadow">Detay</span>
-          </div>
-        </div>
-        <div class="relative bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-700 rounded-xl shadow-lg px-6 py-4 min-w-[180px] max-w-xs flex flex-col items-center hover:scale-105 transition-transform group">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
-            <span class="text-base font-bold text-red-400">Hata</span>
-          </div>
-          <div class="text-xs text-slate-300 mb-1">18.06.2025 12:10:12</div>
-          <div class="text-xs text-slate-400">Timeout</div>
-          <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-            <span class="bg-slate-700 text-xs text-white rounded px-2 py-1 shadow">Detay</span>
-          </div>
-        </div>
-        -->
       </div>
     </section>
 
@@ -83,31 +54,6 @@
         Port Durumu
       </h2>
       <div id="ports" class="flex flex-wrap gap-6 justify-center">
-        <!-- Örnek port kartı, JS ile dinamik doldurulacak -->
-        <!--
-        <div class="relative bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-700 rounded-xl shadow-lg px-6 py-4 min-w-[120px] max-w-xs flex flex-col items-center hover:scale-105 transition-transform group">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></span>
-            <span class="text-base font-bold text-green-400">Açık</span>
-          </div>
-          <div class="text-lg font-mono text-slate-100">22</div>
-          <div class="text-xs text-slate-400">SSH</div>
-          <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-            <span class="bg-slate-700 text-xs text-white rounded px-2 py-1 shadow">Port Detayı</span>
-          </div>
-        </div>
-        <div class="relative bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-700 rounded-xl shadow-lg px-6 py-4 min-w-[120px] max-w-xs flex flex-col items-center hover:scale-105 transition-transform group">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
-            <span class="text-base font-bold text-red-400">Kapalı</span>
-          </div>
-          <div class="text-lg font-mono text-slate-100">25</div>
-          <div class="text-xs text-slate-400">SMTP</div>
-          <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-            <span class="bg-slate-700 text-xs text-white rounded px-2 py-1 shadow">Port Detayı</span>
-          </div>
-        </div>
-        -->
       </div>
     </section>
 

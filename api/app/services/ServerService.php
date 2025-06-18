@@ -12,18 +12,6 @@ class ServerService
     private $serverModel;
     private $portService;
     private $notificationService;
-    private $marsIpBlocks = [
-        '45.158.12.0/24',
-        '45.195.25.0/24',
-        '78.111.111.0/24',
-        '185.139.5.0/24',
-        '213.238.170.0/24',
-        '213.238.179.0/24',
-        '213.238.181.0/24',
-        '213.238.190.0/24',
-        '217.195.202.0/24',
-        '217.195.207.0/24',
-    ];
 
     public function __construct($pdo)
     {
@@ -163,9 +151,6 @@ class ServerService
     public function checkAllStatuses()
     {
         $servers = $this->getServersWithStatus();
-        $servers = array_filter($servers, function($server) {
-            return $this->ipInBlocks($server['ip'], $this->marsIpBlocks);
-        });
 
         $processes = [];
         $pipesList = [];
@@ -237,7 +222,7 @@ class ServerService
 
             // Durum değiştiyse bildirim oluştur
             if ($previousStatus !== null && $previousStatus !== $status) {
-                $serverName = "{$server['name']} (IP: {$server['ip']}, ID: {$server['assigned_id']})";
+                $serverName = "{$server['name']} (IP: {$server['ip']}})";
                 if ($status === 1) {
                     $active_messages = getActiveMessages();
                     $msg = $active_messages[array_rand($active_messages)];
@@ -338,18 +323,5 @@ class ServerService
                 $this->portService->updatePortStatus($portId, 0);
             }
         }
-    }
-
-    private function ipInBlocks($ip, $blocks) {
-        foreach ($blocks as $block) {
-            list($subnet, $mask) = explode('/', $block);
-            $ipLong = ip2long($ip);
-            $subnetLong = ip2long($subnet);
-            $maskLong = -1 << (32 - (int)$mask);
-            if (($ipLong & $maskLong) === ($subnetLong & $maskLong)) {
-                return true;
-            }
-        }
-        return false;
     }
 }

@@ -49,16 +49,17 @@ class ServerModel
     public function insertServer($data)
     {
         try {
-            $stmt = $this->pdo->prepare("INSERT INTO servers (ip, name, location,assigned_id, is_active, last_checks) VALUES (:ip, :name, :location, :assigned_id, :is_active, :last_checks)");
+            $stmt = $this->pdo->prepare("INSERT INTO servers (ip, name, location, panel, is_active, last_checks) VALUES (:ip, :name, :location, :panel, :is_active, :last_checks)");
 
             $is_active = isset($data['is_active']) ? ($data['is_active'] ? 1 : 0) : 0;
             $last_checks = $data['last_checks'] ?? '{}';
+            $panel = $data['panel'] ?? 'Yok';
 
             $stmt->execute([
                 'ip' => $data['ip'],
                 'name' => $data['name'],
                 'location' => $data['location'],
-                'assigned_id' => $data['assigned_id'],
+                'panel' => $panel,
                 'is_active' => $is_active,
                 'last_checks' => $last_checks,
             ]);
@@ -82,23 +83,22 @@ class ServerModel
         try {
             $stmt = $this->pdo->prepare("
                 UPDATE servers 
-                SET ip = :ip, name = :name, assigned_id = :assigned_id , location = :location
+                SET ip = :ip, 
+                    name = :name, 
+                    location = :location,
+                    panel = :panel,
+                    is_active = :is_active
                 WHERE id = :id
             ");
 
             $stmt->execute([
                 'ip' => $data['ip'],
                 'name' => $data['name'],
-                'assigned_id' => $data['assigned_id'],
                 'location' => $data['location'],
+                'panel' => $data['panel'] ?? 'Yok',
+                'is_active' => isset($data['is_active']) ? ($data['is_active'] ? 1 : 0) : 0,
                 'id' => $id,
             ]);
-
-            /*
-            if ($stmt->rowCount() === 0) {
-                // return ["error" => "No server found with the provided ID or data is the same."];
-            }
-            */
 
             return ["message" => "Server updated successfully"];
         } catch (PDOException $e) {

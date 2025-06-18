@@ -1,5 +1,4 @@
-<nav class="bg-gradient-to-r from-slate-900 to-slate-800 shadow-2xl w-full flex flex-wrap items-center justify-between px-2 py-2 h-20 z-50 overflow-x-hidden">
-    <!-- Sol: Logo ve App Adı -->
+<nav class="bg-gradient-to-r from-slate-900 to-slate-800 shadow-2xl w-full flex flex-wrap items-center justify-between px-3 py-2 h-20 z-50 overflow-x-hidden">
     <a href="<?= $baseUrl ?>" class="flex items-center gap-2 min-w-0">
         <span class="bg-blue-600 text-white rounded-full p-1 shadow-lg">
             <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 17.25h16.5M4.5 6.75h15v10.5a2.25 2.25 0 0 1-2.25 2.25h-10.5A2.25 2.25 0 0 1 4.5 17.25V6.75zm3 3.75h9"/></svg>
@@ -8,9 +7,6 @@
             <?= $appName ?>
         </span>
     </a>
-    <!-- Orta: Başlık (isteğe bağlı) -->
-    <div class="hidden md:block text-base text-slate-200 font-semibold tracking-wide select-none truncate">Sunucu Paneli</div>
-    <!-- Sağ: Butonlar -->
     <div class="flex items-center gap-1 flex-shrink-0">
         <a href="<?= $baseUrl ?>/server/addServer" class="flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r from-blue-600 to-blue-400 text-white font-semibold shadow hover:from-blue-700 hover:to-blue-500 transition text-sm min-w-0">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>

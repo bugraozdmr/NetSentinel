@@ -18,22 +18,25 @@
         </div>
     </div>
     <!-- Lokasyon Seçimi ve Arama -->
-    <div class="flex flex-col md:flex-row gap-4 mb-8 justify-center items-center">
-        <div class="flex gap-4">
-            <button id="locationAllBtn" class="location-filter-btn px-5 py-2 rounded-lg font-semibold bg-blue-600 text-white shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition">Tümü</button>
-            <button id="locationMarsBtn" class="location-filter-btn px-5 py-2 rounded-lg font-semibold bg-slate-800 text-blue-300 shadow hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition">Mars</button>
-            <button id="locationHetznerBtn" class="location-filter-btn px-5 py-2 rounded-lg font-semibold bg-slate-800 text-blue-300 shadow hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition">Hetzner</button>
+    <div class="flex flex-wrap gap-4 mb-8">
+        <div class="flex gap-2">
+            <button id="locationAllBtn" class="location-filter-btn px-4 py-2 rounded-lg bg-blue-600 text-white font-medium transition-all" data-location="Tümü">Tümü</button>
+            <button id="locationMarsBtn" class="location-filter-btn px-4 py-2 rounded-lg bg-slate-800 text-blue-300 font-medium transition-all" data-location="Mars">Mars</button>
+            <button id="locationHetznerBtn" class="location-filter-btn px-4 py-2 rounded-lg bg-slate-800 text-blue-300 font-medium transition-all" data-location="Hetzner">Hetzner</button>
         </div>
-        <div class="w-full md:w-72 relative">
-            <input
-                type="text"
-                id="searchInput"
-                class="w-full pl-3 pr-10 h-10 text-sm border border-slate-700 rounded-md placeholder:text-slate-400 text-slate-100 bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-shadow shadow-sm"
-                placeholder="Sunucu ara..." />
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"
-                class="w-5 h-5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <path d="M 21 3 C 11.601563 3 4 10.601563 4 20 C 4 29.398438 11.601563 37 21 37 C 24.355469 37 27.460938 36.015625 30.09375 34.34375 L 42.375 46.625 L 46.625 42.375 L 34.5 30.28125 C 36.679688 27.421875 38 23.878906 38 20 C 38 10.601563 30.398438 3 21 3 Z M 21 7 C 28.199219 7 34 12.800781 34 20 C 34 27.199219 28.199219 33 21 33 C 13.800781 33 8 27.199219 8 20 C 8 12.800781 13.800781 7 21 7 Z"></path>
-            </svg>
+        <div class="flex-1">
+            <select id="panelFilter" class="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-blue-300 font-medium transition-all">
+                <option value="all">Tüm Paneller</option>
+                <option value="cPanel">cPanel</option>
+                <option value="Plesk">Plesk</option>
+                <option value="Backup">Backup</option>
+                <option value="ESXi">ESXi</option>
+                <option value="Yok">Yok</option>
+                <option value="Diğer">Diğer</option>
+            </select>
+        </div>
+        <div class="flex-1">
+            <input type="text" id="searchInput" placeholder="Sunucu ara..." class="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-blue-300 font-medium transition-all placeholder-blue-300/50" />
         </div>
     </div>
     <!-- Kart Grid -->

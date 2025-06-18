@@ -1,5 +1,5 @@
 <?php
-include __DIR__ . '/../../config/ports.php';
+include __DIR__ . '/../../config/data.php';
 ?>
 
 <div class="max-w-xl mx-auto mt-16 mb-16 px-6 sm:px-8 py-10 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-2xl border border-slate-700 transition-all">
@@ -38,17 +38,6 @@ include __DIR__ . '/../../config/ports.php';
         </div>
 
         <div>
-            <label for="assigned_id" class="block text-sm font-medium text-slate-300 mb-1">Atanmış ID</label>
-            <input
-                type="text"
-                id="assigned_id"
-                name="assigned_id"
-                placeholder="ubuntuvm"
-                class="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-200 placeholder-slate-400 text-slate-100"
-                required />
-        </div>
-
-        <div>
             <label for="location" class="block text-sm font-medium text-slate-300 mb-1">Konum</label>
             <select
                 id="location"
@@ -62,6 +51,20 @@ include __DIR__ . '/../../config/ports.php';
         </div>
 
         <div>
+            <label for="panel" class="block text-sm font-medium text-slate-300 mb-1">Panel</label>
+            <select
+                id="panel"
+                name="panel"
+                class="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-200 text-slate-100"
+                required>
+                <option value="" disabled selected>Bir panel seçin</option>
+                <?php foreach ($panels as $panel): ?>
+                    <option value="<?= htmlspecialchars($panel) ?>"><?= htmlspecialchars($panel) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <div>
             <label class="block text-sm font-semibold text-blue-200 mb-3">Port Seçimi</label>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 <?php foreach ($ports as $port): ?>
@@ -71,7 +74,6 @@ include __DIR__ . '/../../config/ports.php';
                                 type="checkbox"
                                 name="ports[]"
                                 value="<?= $port ?>"
-                                checked
                                 class="accent-blue-500 h-4 w-4 rounded border-slate-700 bg-slate-800" />
                             <span class="text-sm font-medium text-slate-200"><?= $port ?></span>
                         </div>

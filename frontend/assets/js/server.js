@@ -128,6 +128,17 @@ $(document).ready(function () {
     return `<svg class="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 17.25h16.5M4.5 6.75h15v10.5a2.25 2.25 0 0 1-2.25 2.25h-10.5A2.25 2.25 0 0 1 4.5 17.25V6.75zm3 3.75h9"/></svg>`;
   }
 
+  function getPanelIcon(panel, sizeClass = 'w-6 h-6') {
+    const p = (panel || '').toLowerCase();
+    if (p === 'cpanel') return `<img src="https://cdn.simpleicons.org/cpanel/FF6C2C" alt="cPanel" title="cPanel" class="${sizeClass} inline-block align-middle" />`;
+    if (p === 'plesk') return `<img src="https://cdn.simpleicons.org/plesk/52B0E7" alt="Plesk" title="Plesk" class="${sizeClass} inline-block align-middle" />`;
+    if (p === 'backup') return `<img src="https://cdn.simpleicons.org/minio/00B4B6" alt="Backup" title="Backup" class="${sizeClass} inline-block align-middle" />`;
+    if (p === 'esxi') return `<img src="https://cdn.simpleicons.org/vmware/607078" alt="ESXi" title="ESXi" class="${sizeClass} inline-block align-middle" />`;
+    if (p === 'yok') return `<img src="https://cdn.simpleicons.org/protonmail/gray" alt="Panel Yok" title="Panel Yok" class="${sizeClass} inline-block align-middle opacity-40" />`;
+    if (p === 'diğer' || p === 'diger') return `<img src="https://cdn.simpleicons.org/settings/gray" alt="Diğer" title="Diğer" class="${sizeClass} inline-block align-middle" />`;
+    return `<img src="https://cdn.simpleicons.org/question/gray" alt="Bilinmiyor" title="Bilinmiyor" class="${sizeClass} inline-block align-middle opacity-40" />`;
+  }
+
   function renderPanel(servers) {
     $panelGrid.empty();
     if (servers.length === 0) {
@@ -159,10 +170,11 @@ $(document).ready(function () {
           </div>
           <!-- Durum LED'i -->
           <span class="absolute top-4 right-4 w-3 h-3 rounded-full ${ledColor} border-2 border-white shadow"></span>
-          <!-- Atanmış ID -->
-          <div class="uppercase text-xs tracking-widest text-blue-400 mb-2 mt-8">${server.assigned_id || '-'}</div>
           <!-- Sunucu Adı ve IP -->
-          <div class="text-2xl font-extrabold text-white mb-1">${server.name}</div>
+          <div class="flex flex-col items-center mb-1">
+            <span class="mb-3">${getPanelIcon(server.panel, 'w-12 h-12')}</span>
+            <span class="text-2xl font-extrabold text-white">${server.name}</span>
+          </div>
           <div class="text-sm text-blue-200 mb-4">${server.ip}</div>
           <!-- Durum Badge -->
           <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold border border-slate-600 bg-slate-700 text-white mb-2">${statusText}</span>
@@ -257,7 +269,7 @@ $(document).ready(function () {
   $search.on("input", function () {
     const keyword = $(this).val().toLowerCase();
     const filtered = allServers.filter((s) =>
-      [s.ip, s.name, s.assigned_id, s.location].some((val) =>
+      [s.ip, s.name, s.location].some((val) =>
         val.toLowerCase().includes(keyword)
       )
     );
@@ -322,10 +334,12 @@ $(document).ready(function () {
       const formData = {
         ip: $("#ip").val().trim(),
         name: $("#name").val().trim(),
-        assigned_id: $("#assigned_id").val().trim(),
         location: $("#location").val().trim(),
+        panel: $("#panel").val().trim(),
         ports: selectedPorts,
       };
+
+      console.log('Add Server outgoing data:', formData);
 
       $successMsg.addClass("hidden");
       $errorMsg.addClass("hidden").text("");
@@ -358,24 +372,6 @@ $(document).ready(function () {
     window.location.href = `/${APP_NAME}/server/updateServer/${id}`;
   });
 
-  function setLocationSafely(locationValue) {
-    const $select = $("#location");
-
-    const matched = $select.find(`option[value="${locationValue}"]`);
-
-    if (matched.length) {
-      $select.val(locationValue);
-    } else {
-      $select.append(
-        $("<option>", {
-          value: locationValue,
-          text: locationValue,
-          selected: true
-        })
-      );
-    }
-  }
-
   const $editFormWrapper = $("#editFormWrapper");
 
   if ($editFormWrapper.length) {
@@ -399,7 +395,6 @@ $(document).ready(function () {
 
           $("#ip").val(server.ip);
           $("#name").val(server.name);
-          $("#assigned_id").val(server.assigned_id);
 
           const activePorts = Array.isArray(server.ports)
             ? server.ports.map((p) => String(p.port_number))
@@ -411,7 +406,8 @@ $(document).ready(function () {
           });
 
           setTimeout(() => {
-            setLocationSafely(server.location);
+            $("#locationUpdate").val(server.location);
+            $("#panel").val(server.panel);
           }, 100);
 
           $loading.addClass("hidden");
@@ -434,14 +430,16 @@ $(document).ready(function () {
     const formData = {
       ip: $("#ip").val().trim(),
       name: $("#name").val().trim(),
-      assigned_id: $("#assigned_id").val().trim(),
-      location: $("#location").val().trim(),
+      location: $("#locationUpdate").val().trim(),
+      panel: $("#panel").val().trim(),
       ports: $("input[name='ports[]']:checked")
         .map(function () {
           return parseInt($(this).val(), 10);
         })
         .get(),
     };
+
+    console.log('Update outgoing data:', formData);
 
     $.ajax({
       url: `${API_BASE_URL}/servers/edit/${serverId}`,
@@ -452,7 +450,7 @@ $(document).ready(function () {
         window.location.href = `/${APP_NAME}/`;
       },
       error: function (xhr) {
-        const errMsg = xhr.responseJSON?.message || "Sunucu güncellenemedi.";
+        const errMsg = xhr.responseJSON?.errors || xhr.responseJSON?.message || "Sunucu güncellenemedi.";
         $("#updateErrorMsg").text(errMsg).removeClass("hidden");
       },
     });
@@ -483,25 +481,33 @@ $(document).ready(function () {
 
         if (data.notifications && data.notifications.length > 0) {
           data.notifications.forEach(function (notif) {
-            // Duruma göre stil
             const isUnread = notif.status === "unread";
-
-            const borderColor = isUnread
-              ? "border-blue-400"
-              : "border-gray-300";
-            const bgColor = isUnread ? "bg-blue-50" : "bg-white";
-            const fontWeight = isUnread ? "font-semibold" : "font-normal";
-            const textColor = isUnread ? "text-gray-900" : "text-gray-700";
+            const border = isUnread
+              ? "border-2 border-blue-400 bg-gradient-to-br from-blue-900/80 to-blue-800/80"
+              : "border border-slate-700 bg-slate-800/80";
+            const shadow = isUnread
+              ? "shadow-xl hover:shadow-blue-400/40"
+              : "shadow-md hover:shadow-lg";
+            const scale = isUnread ? "hover:scale-[1.025]" : "hover:scale-[1.01]";
+            const badge = isUnread
+              ? `<span class='absolute -top-3 left-3 bg-gradient-to-r from-blue-500 to-blue-400 text-white text-xs font-bold px-3 py-1 rounded-full shadow animate-pulse z-10'>Yeni</span>`
+              : "";
+            const icon = `<span class='flex items-center justify-center w-10 h-10 rounded-full bg-blue-700/80 text-white shadow-lg mr-4'>
+              <svg class='w-6 h-6' fill='none' stroke='currentColor' stroke-width='2' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' d='M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' /></svg>
+            </span>`;
+            const msg = `<span class='block text-base md:text-lg font-semibold text-slate-100 mb-1'>${notif.message}</span>`;
+            const time = `<span class='block text-xs text-slate-400 text-right mt-2'>${new Date(notif.created_at).toLocaleString()}</span>`;
 
             const li = $(`
-            <li class="border ${borderColor} rounded-lg p-4 mb-3 shadow-sm ${bgColor} hover:shadow-md transition-shadow duration-200 cursor-pointer">
-              <p class="${fontWeight} ${textColor}">${notif.message}</p>
-              <time class="block text-xs text-gray-500 mt-1" datetime="${notif.created_at
-              }">
-                ${new Date(notif.created_at).toLocaleString()}
-              </time>
-            </li>
-          `);
+              <li class="relative flex items-start gap-3 p-5 md:p-6 rounded-2xl ${border} ${shadow} ${scale} transition-all duration-200 cursor-pointer group overflow-hidden">
+                ${badge}
+                ${icon}
+                <div class="flex-1 min-w-0">
+                  ${msg}
+                  ${time}
+                </div>
+              </li>
+            `);
 
             $list.append(li);
           });
@@ -534,7 +540,6 @@ $(document).ready(function () {
       $("#name").text(server.name);
       $("#ip").text(server.ip);
       $("#location").text(server.location);
-      $("#assigned_id").text(server.assigned_id);
       $("#last_check_at").text(server.last_check_at);
 
       if (server.is_active == 1) {
@@ -782,22 +787,56 @@ $(document).ready(function () {
   function setLocationFilter(selected) {
     $(".location-filter-btn").removeClass("bg-blue-600 text-white").addClass("bg-slate-800 text-blue-300");
     let filtered = allServers;
+
+    // Lokasyon filtresi
     if (selected === "Tümü") {
       $("#locationAllBtn").addClass("bg-blue-600 text-white").removeClass("bg-slate-800 text-blue-300");
-      filtered = allServers;
     } else if (selected === "Mars") {
       $("#locationMarsBtn").addClass("bg-blue-600 text-white").removeClass("bg-slate-800 text-blue-300");
-      filtered = allServers.filter(s => (s.location || '').toLowerCase().includes('mars'));
+      filtered = filtered.filter(s => (s.location || '').toLowerCase().includes('mars'));
     } else if (selected === "Hetzner") {
       $("#locationHetznerBtn").addClass("bg-blue-600 text-white").removeClass("bg-slate-800 text-blue-300");
-      filtered = allServers.filter(s => (s.location || '').toLowerCase().includes('hetzner'));
+      filtered = filtered.filter(s => (s.location || '').toLowerCase().includes('hetzner'));
     }
+
+    // Panel filtresi
+    const selectedPanel = $("#panelFilter").val();
+    if (selectedPanel !== "all") {
+      filtered = filtered.filter(s => (s.panel || '').toLowerCase() === selectedPanel.toLowerCase());
+    }
+
+    // Arama filtresi
+    const searchTerm = $("#searchInput").val().toLowerCase();
+    if (searchTerm) {
+      filtered = filtered.filter(s =>
+        [s.ip, s.name, s.location].some(val =>
+          (val || '').toLowerCase().includes(searchTerm)
+        )
+      );
+    }
+
     updateSummaryBar(filtered);
     renderPanel(filtered);
   }
-  $(document).on("click", "#locationAllBtn", function () { setLocationFilter("Tümü"); });
-  $(document).on("click", "#locationMarsBtn", function () { setLocationFilter("Mars"); });
-  $(document).on("click", "#locationHetznerBtn", function () { setLocationFilter("Hetzner"); });
+
+  // Panel filtresi değiştiğinde
+  $("#panelFilter").on("change", function () {
+    const selectedLocation = $(".location-filter-btn.bg-blue-600").data("location") || "Tümü";
+    setLocationFilter(selectedLocation);
+  });
+
+  // Arama inputu değiştiğinde
+  $("#searchInput").on("input", function () {
+    const selectedLocation = $(".location-filter-btn.bg-blue-600").data("location") || "Tümü";
+    setLocationFilter(selectedLocation);
+  });
+
+  // Lokasyon butonlarına tıklama
+  $(".location-filter-btn").on("click", function () {
+    const selected = $(this).data("location");
+    setLocationFilter(selected);
+  });
+
   // Sayfa yüklenince varsayılan olarak 'Tümü' seçili olsun
   setLocationFilter("Tümü");
 });

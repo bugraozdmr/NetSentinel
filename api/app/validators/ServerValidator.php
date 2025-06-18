@@ -1,4 +1,5 @@
 <?php
+include_once __DIR__ . '/../data/serverInsertAreas.php';
 
 class ServerValidator
 {
@@ -16,12 +17,9 @@ class ServerValidator
             $errors['name'] = 'Server name is required.';
         }
 
-        if (!isset($data['location']) || empty($data['location'])) {
-            $errors['location'] = 'Location is required.';
-        }
-
-        if (empty($data['assigned_id'])) {
-            $errors['assigned_id'] = 'Assigned ID is required.';
+        $validLocations = getLocations();
+        if (!isset($data['location']) || strtolower($data['location']) === '' || !in_array(strtolower($data['location']), $validLocations, true)) {
+            $errors['location'] = 'Location is required and must be one of the following values: ' . implode(', ', $validLocations);
         }
 
         if (isset($data['is_active']) && !is_bool($data['is_active'])) {
@@ -51,6 +49,11 @@ class ServerValidator
             }
         }
 
+        $validPanels = getPanels();
+        if (!isset($data['panel']) || strtolower($data['panel']) === '' || !in_array(strtolower($data['panel']), array_map('strtolower', $validPanels), true)) {
+            $errors['panel'] = 'Panel area is required and must be one of the following values: ' . implode(', ', $validPanels);
+        }
+
         return $errors;
     }
 
@@ -68,12 +71,9 @@ class ServerValidator
             $errors['name'] = 'Server name is required.';
         }
 
-        if (!isset($data['location']) || empty($data['location'])) {
-            $errors['location'] = 'Location is required.';
-        }
-
-        if (!isset($data['assigned_id']) || empty($data['assigned_id'])) {
-            $errors['assigned_id'] = 'Assigned ID is required.';
+        $validLocations = getLocations();
+        if (!isset($data['location']) || strtolower($data['location']) === '' || !in_array(strtolower($data['location']), $validLocations, true)) {
+            $errors['location'] = 'Location is required and must be one of the following values: ' . implode(', ', $validLocations);
         }
 
         if (isset($data['ports'])) {
@@ -89,6 +89,13 @@ class ServerValidator
                         $errors["ports[$index]"] = 'Port number must be between 1 and 65535.';
                     }
                 }
+            }
+        }
+
+        $validPanels = getPanels();
+        if (isset($data['panel'])) {
+            if (!in_array(strtolower($data['panel']), array_map('strtolower', $validPanels), true)) {
+                $errors['panel'] = 'Panel must be one of the following values: ' . implode(', ', $validPanels);
             }
         }
 
