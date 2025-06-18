@@ -10,6 +10,11 @@
 - making this as service with .conf file
 - port eklenince server mevcut mu kontrolu
 - düzenlencek http://192.168.253.5/netsentinel/api .htaccess
+- refactor kod
+
+- pagination notifications'a
+** logger ekle bence güzelce şuanlık sonra exception handler kapsamlı
+** MAIL yollama ?! notification yanında 
 
 -- HATA MEKANIZMASI DÜZENLENCEK GENEL
 {
@@ -25,3 +30,4 @@ http://localhost/netsentinel/assets/js/config.js
 api ve assets için giriyor
 
 -- kullanıcı buraya erişebilir sadece api yolunu düzenle yeter
+
