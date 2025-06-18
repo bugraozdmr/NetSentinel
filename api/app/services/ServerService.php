@@ -4,6 +4,11 @@ require_once __DIR__ . '/PortService.php';
 require_once __DIR__ . '/NotificationService.php';
 require_once __DIR__ . '/../utils/config.php';
 require_once __DIR__ . '/../data/messages.php';
+require_once __DIR__ . '/../exceptions/DatabaseException.php';
+require_once __DIR__ . '/../exceptions/NotFoundException.php';
+
+use App\Exceptions\DatabaseException;
+use App\Exceptions\NotFoundException;
 
 Config::load();
 
@@ -23,10 +28,7 @@ class ServerService
     public function getServersWithStatus()
     {
         $servers = $this->serverModel->getAllServers();
-        if (isset($servers['error'])) {
-            return $servers;
-        }
-
+        
         foreach ($servers as &$server) {
             $ports = $this->portService->getPortsByServer((int)$server['id']);
             $server['ports'] = $ports;
@@ -39,12 +41,8 @@ class ServerService
     {
         $server = $this->serverModel->getServerById($id);
 
-        if (isset($server['error'])) {
-            return $server;
-        }
-
         if (!$server) {
-            return ["error" => "Sunucu bulunamadı"];
+            throw new NotFoundException("Server not found", ['id' => $id]);
         }
 
         $ports = $this->portService->getPortsByServer((int)$id);
@@ -53,15 +51,9 @@ class ServerService
         return $server;
     }
 
-
     public function addServer(array $data)
     {
         $result = $this->serverModel->insertServer($data);
-
-        if (isset($result['error'])) {
-            return $result;
-        }
-
         $serverId = $result['server_id'] ?? null;
 
         if (!empty($data['ports']) && is_array($data['ports']) && $serverId) {
@@ -87,21 +79,10 @@ class ServerService
         return $result;
     }
 
-
     public function editServer(int $id, array $data)
     {
         $cs = $this->getServerByIdWithStatus($id);
-
-        if (isset($cs['error'])) {
-            return $cs;
-        }
-
         $updateResult = $this->serverModel->updateServer($id, $data);
-
-        // Başarısız güncelleme varsa direk dön
-        if (isset($updateResult['error'])) {
-            return $updateResult;
-        }
 
         $portResults = [];
 
@@ -140,130 +121,132 @@ class ServerService
         return array_merge($updateResult, $portResults);
     }
 
-
     public function deleteServer($serverId)
     {
         return $this->serverModel->deleteServer($serverId);
     }
 
-
     //* STATUS CHECKER
     public function checkAllStatuses()
     {
-        $servers = $this->getServersWithStatus();
+        try {
+            $servers = $this->getServersWithStatus();
 
-        $processes = [];
-        $pipesList = [];
+            $processes = [];
+            $pipesList = [];
 
-        $pingScript = realpath(__DIR__ . '/../utils/ping.php');
+            $pingScript = realpath(__DIR__ . '/../utils/ping.php');
 
-        $activeServers = [];
-        $inactiveServers = [];
+            $activeServers = [];
+            $inactiveServers = [];
 
-        foreach ($servers as $index => $server) {
-            $pipes = [];
-            $cmd = escapeshellcmd(Config::getPhpPath()) . ' ' . escapeshellarg($pingScript) . ' ' . escapeshellarg($server['ip']);
+            foreach ($servers as $index => $server) {
+                $pipes = [];
+                $cmd = escapeshellcmd(Config::getPhpPath()) . ' ' . escapeshellarg($pingScript) . ' ' . escapeshellarg($server['ip']);
 
-            $processes[$index] = proc_open(
-                $cmd,
-                [
-                    1 => ['pipe', 'w'],
-                    2 => ['pipe', 'w'],
-                ],
-                $pipes
-            );
+                $processes[$index] = proc_open(
+                    $cmd,
+                    [
+                        1 => ['pipe', 'w'],
+                        2 => ['pipe', 'w'],
+                    ],
+                    $pipes
+                );
 
-            if (is_resource($processes[$index])) {
-                $pipesList[$index] = $pipes;
-            } else {
-                $pipesList[$index] = null;
-            }
-        }
-
-        foreach ($processes as $index => $proc) {
-            $pipes = $pipesList[$index];
-            if (!$pipes) continue;
-
-            $output = stream_get_contents($pipes[1]);
-            $errorOutput = stream_get_contents($pipes[2]);
-
-            fclose($pipes[1]);
-            fclose($pipes[2]);
-            proc_close($proc);
-
-            if (trim($errorOutput)) {
-                file_put_contents(__DIR__ . '/../../ping_errors.log', "Server #{$index}: $errorOutput\n", FILE_APPEND);
-            }
-
-            $server = $servers[$index];
-            $id = $server['id'];
-            $location = $server['location'];
-
-            $pingResult = json_decode(trim($output), true);
-
-            $status = 0;
-            $avgMs = null;
-
-            if (is_array($pingResult)) {
-                $status = isset($pingResult['status']) ? (int)$pingResult['status'] : 0;
-                $avgMs = isset($pingResult['avg_ms']) ? $pingResult['avg_ms'] : null;
-            }
-
-            $lastChecks = json_decode($server['last_checks'], true);
-            if (!is_array($lastChecks)) {
-                $lastChecks = [];
-            }
-
-            // Önceki durumu al
-            $previousStatus = null;
-            if (count($lastChecks) > 0) {
-                $previousStatus = $lastChecks[count($lastChecks) - 1]['status'];
-            }
-
-            // Durum değiştiyse bildirim oluştur
-            if ($previousStatus !== null && $previousStatus !== $status) {
-                $serverName = "{$server['name']} (IP: {$server['ip']}})";
-                if ($status === 1) {
-                    $active_messages = getActiveMessages();
-                    $msg = $active_messages[array_rand($active_messages)];
+                if (is_resource($processes[$index])) {
+                    $pipesList[$index] = $pipes;
                 } else {
-                    $passive_messages = getPassiveMessages();
-                    $msg = $passive_messages[array_rand($passive_messages)];
+                    $pipesList[$index] = null;
                 }
-                $message = "Sunucu {$serverName} {$msg}.";
-
-                $this->notificationService->addNotification([
-                    "server_id" => $server['id'],
-                    "message" => $message,
-                ]);
             }
 
-            $currentTime = date('Y-m-d H:i:s');
+            foreach ($processes as $index => $proc) {
+                $pipes = $pipesList[$index];
+                if (!$pipes) continue;
 
-            $lastChecks[] = [
-                'time' => $currentTime,
-                'status' => $status,
-                'avg_ms' => $avgMs !== null ? number_format($avgMs, 2, '.', '') : null
-            ];
+                $output = stream_get_contents($pipes[1]);
+                $errorOutput = stream_get_contents($pipes[2]);
 
-            if (count($lastChecks) > 10) {
-                array_shift($lastChecks);
+                fclose($pipes[1]);
+                fclose($pipes[2]);
+                proc_close($proc);
+
+                if (trim($errorOutput)) {
+                    file_put_contents(__DIR__ . '/../../ping_errors.log', "Server #{$index}: $errorOutput\n", FILE_APPEND);
+                }
+
+                $server = $servers[$index];
+                $id = $server['id'];
+                $location = $server['location'];
+
+                $pingResult = json_decode(trim($output), true);
+
+                $status = 0;
+                $avgMs = null;
+
+                if (is_array($pingResult)) {
+                    $status = isset($pingResult['status']) ? (int)$pingResult['status'] : 0;
+                    $avgMs = isset($pingResult['avg_ms']) ? $pingResult['avg_ms'] : null;
+                }
+
+                $lastChecks = json_decode($server['last_checks'], true);
+                if (!is_array($lastChecks)) {
+                    $lastChecks = [];
+                }
+
+                // Önceki durumu al
+                $previousStatus = null;
+                if (count($lastChecks) > 0) {
+                    $previousStatus = $lastChecks[count($lastChecks) - 1]['status'];
+                }
+
+                // Durum değiştiyse bildirim oluştur
+                if ($previousStatus !== null && $previousStatus !== $status) {
+                    $serverName = "{$server['name']} (IP: {$server['ip']}})";
+                    if ($status === 1) {
+                        $active_messages = getActiveMessages();
+                        $msg = $active_messages[array_rand($active_messages)];
+                    } else {
+                        $passive_messages = getPassiveMessages();
+                        $msg = $passive_messages[array_rand($passive_messages)];
+                    }
+                    $message = "Sunucu {$serverName} {$msg}.";
+
+                    $this->notificationService->addNotification([
+                        "server_id" => $server['id'],
+                        "message" => $message,
+                    ]);
+                }
+
+                $currentTime = date('Y-m-d H:i:s');
+
+                $lastChecks[] = [
+                    'time' => $currentTime,
+                    'status' => $status,
+                    'avg_ms' => $avgMs !== null ? number_format($avgMs, 2, '.', '') : null
+                ];
+
+                if (count($lastChecks) > 10) {
+                    array_shift($lastChecks);
+                }
+
+                $this->serverModel->updateStatus($id, $status, json_encode($lastChecks), $location);
+
+                if ($status === 1) {
+                    $activeServers[] = $server;
+                } else {
+                    $inactiveServers[] = $server;
+                }
             }
 
-            $this->serverModel->updateStatus($id, $status, json_encode($lastChecks), $location);
-
-            if ($status === 1) {
-                $activeServers[] = $server;
-            } else {
-                $inactiveServers[] = $server;
-            }
+            $this->scanPorts($activeServers);
+            $this->markPortsClosed($inactiveServers);
+            
+        } catch (Exception $e) {
+            error_log("Error in checkAllStatuses: " . $e->getMessage());
+            throw $e; // Re-throw the exception so it can be handled by the exception handler
         }
-
-        $this->scanPorts($activeServers);
-        $this->markPortsClosed($inactiveServers);
     }
-
-
 
     // Port tarama fonksiyonu
     public function scanPorts(array $activeServers)
@@ -274,7 +257,15 @@ class ServerService
         $portScanScript = realpath(__DIR__ . '/../utils/portScan.php');
 
         foreach ($activeServers as $server) {
+            if (!isset($server['ports']) || empty($server['ports'])) {
+                continue; // Skip servers without ports
+            }
+            
             foreach ($server['ports'] as $port) {
+                if (!isset($port['id']) || !isset($port['port_number'])) {
+                    continue; // Skip invalid port data
+                }
+                
                 $cmd = escapeshellcmd(Config::getPhpPath()) . ' ' . escapeshellarg($portScanScript) . ' ' . escapeshellarg($server['ip']) . ' ' . escapeshellarg($port['port_number']);
 
                 $pipes = [];
@@ -311,16 +302,32 @@ class ServerService
                 error_log("Port scan error on port $portId: $errorOutput");
             }
 
-            $this->portService->updatePortStatus($portId, $isOpen);
+            try {
+                $this->portService->updatePortStatus($portId, $isOpen);
+            } catch (Exception $e) {
+                error_log("Failed to update port status for port $portId: " . $e->getMessage());
+            }
         }
     }
 
     public function markPortsClosed(array $inactiveServers)
     {
         foreach ($inactiveServers as $server) {
+            if (!isset($server['ports']) || empty($server['ports'])) {
+                continue; // Skip servers without ports
+            }
+            
             foreach ($server['ports'] as $port) {
+                if (!isset($port['id'])) {
+                    continue; // Skip invalid port data
+                }
+                
                 $portId = $port['id'];
-                $this->portService->updatePortStatus($portId, 0);
+                try {
+                    $this->portService->updatePortStatus($portId, 0);
+                } catch (Exception $e) {
+                    error_log("Failed to mark port $portId as closed: " . $e->getMessage());
+                }
             }
         }
     }
