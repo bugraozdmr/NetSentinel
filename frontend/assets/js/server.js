@@ -1,4 +1,4 @@
-import { API_BASE_URL, APP_NAME, INTERVAL_TIME } from "./config.js";
+import { API_BASE_URL, APP_NAME, ENABLE_REAL_TIME_UPDATES, REAL_TIME_INTERVAL, PAGE_REFRESH_INTERVAL } from "./config.js";
 import { createModernNotificationCard } from "./helpers/notificationCard.js";
 
 $(document).ready(function () {
@@ -1056,9 +1056,18 @@ $(document).ready(function () {
     //! burda çekme yapıldı index özel
     fetchServers();
 
-    setInterval(function () {
-      location.reload();
-    }, INTERVAL_TIME);
+    if (ENABLE_REAL_TIME_UPDATES) {
+      // Real-time updates instead of page refresh
+      setInterval(function () {
+        console.log('Performing real-time update...');
+        fetchRealTimeUpdate();
+      }, REAL_TIME_INTERVAL);
+    } else {
+      // Fallback to page refresh (legacy behavior)
+      setInterval(function () {
+        location.reload();
+      }, PAGE_REFRESH_INTERVAL);
+    }
   }
 
   //? DETAIL SAYFASI
@@ -1451,4 +1460,99 @@ $(document).ready(function () {
   fetchServers(currentPage, currentLimit, currentFilters);
 
   updateNotificationCount();
+
+  // Real-time update function
+  function fetchRealTimeUpdate() {
+    $.ajax({
+      url: `${API_BASE_URL}/realtime`,
+      method: 'GET',
+      dataType: 'json',
+      success: function (data) {
+        if (data.servers) {
+          // Update server data without full page reload
+          updateServerTable(data.servers);
+
+          // Update notification count if available
+          if (data.notification_count !== undefined) {
+            updateNotificationCount(data.notification_count);
+          }
+
+          console.log(`Real-time update completed at ${data.last_update}`);
+        }
+      },
+      error: function (xhr, status, error) {
+        console.error('Real-time update error:', error);
+        // Fallback to full page reload on error
+        location.reload();
+      }
+    });
+  }
+
+  // Update server table without page reload
+  function updateServerTable(servers) {
+    const $tableBody = $('#serverTable tbody');
+    if (!$tableBody.length) return;
+
+    $tableBody.empty();
+
+    servers.forEach(function (server) {
+      const statusText = server.is_active ? 'Aktif' : 'Kapalı';
+      const statusClass = server.is_active ? 'text-green-400' : 'text-red-400';
+      const statusBgClass = server.is_active ? 'bg-green-900/30' : 'bg-red-900/30';
+      const statusBorderClass = server.is_active ? 'border-green-500/50' : 'border-red-500/50';
+
+      const row = `
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/30 transition-colors">
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-3">
+              <div class="w-2 h-2 rounded-full ${server.is_active ? 'bg-green-400' : 'bg-red-400'}"></div>
+              <span class="font-medium text-slate-200">${server.name}</span>
+            </div>
+          </td>
+          <td class="px-4 py-3 text-slate-300">${server.ip}</td>
+          <td class="px-4 py-3 text-slate-300">${server.location}</td>
+          <td class="px-4 py-3">
+            <span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass} ${statusBgClass} ${statusBorderClass} border">
+              ${statusText}
+            </span>
+          </td>
+          <td class="px-4 py-3 text-slate-300">${server.assigned_id}</td>
+          <td class="px-4 py-3">
+            ${renderStatusBars(server.last_checks)}
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-2">
+              <a href="/${APP_NAME}/server/detail/${server.id}" 
+                 class="text-blue-400 hover:text-blue-300 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+              </a>
+              <a href="/${APP_NAME}/server/updateServer/${server.id}" 
+                 class="text-yellow-400 hover:text-yellow-300 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+              </a>
+            </div>
+          </td>
+        </tr>
+      `;
+      $tableBody.append(row);
+    });
+  }
+
+  // Update notification count
+  function updateNotificationCount(count) {
+    const $notificationBadge = $('.notification-count');
+    if ($notificationBadge.length) {
+      $notificationBadge.text(count);
+      if (count > 0) {
+        $notificationBadge.removeClass('hidden');
+      } else {
+        $notificationBadge.addClass('hidden');
+      }
+    }
+  }
 });

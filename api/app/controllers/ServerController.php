@@ -120,4 +120,23 @@ class ServerController
         $this->serverService->checkAllStatuses();
         echo json_encode(['message' => 'Tüm sunucular kontrol edildi.']);
     }
+
+    public function getRealTimeUpdate(): void
+    {
+        // Get servers with current status (without performing new checks)
+        $servers = $this->serverService->getServersWithStatus();
+        
+        // Get notification count for real-time updates
+        require_once __DIR__ . '/../services/NotificationService.php';
+        global $pdo;
+        $notificationService = new NotificationService($pdo);
+        $notificationCount = $notificationService->getNotificationCount();
+        
+        echo json_encode([
+            'servers' => $servers,
+            'notification_count' => $notificationCount,
+            'last_update' => date('Y-m-d H:i:s'),
+            'update_type' => 'real_time'
+        ]);
+    }
 }

@@ -49,3 +49,7 @@ api ve assets için giriyor
 
 
 11 sn 160 sunucu 56 çalışan
+
+
+Add to crontab: 
+Usage: */5 * * * * /usr/bin/php /path/to/netsentinel/api/app/worker/cron-check-runner.php

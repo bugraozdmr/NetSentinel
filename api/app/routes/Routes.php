@@ -8,6 +8,7 @@ return [
         "servers/stats" => "ServerController@getServerStats",
         "server" => "ServerController@getServer",
         "check" => "ServerController@checkAll",
+        "realtime" => "ServerController@getRealTimeUpdate",
 
         // Ports
         "ports" => "PortController@getPorts",
