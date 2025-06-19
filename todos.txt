@@ -16,6 +16,7 @@
     uzun süreden kapalı olan sunucular için bildirimler oluşcak
     /24 gibi ip'ler alıncak sunucular ona göre oluşcak
     runner cron olmadan nasıl çalışcak
+    Authentication
 
     Mobile
     Localization

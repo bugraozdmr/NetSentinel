@@ -83,39 +83,17 @@ class StatusProcessor
 
         // Create notification if status changed
         if ($previousStatus !== null && $previousStatus !== $newStatus) {
-            $this->createStatusChangeNotification($server, $previousStatus, $newStatus);
+            $this->notificationService->processSmartNotification($server, $previousStatus, $newStatus);
         }
     }
 
     /**
-     * Create notification for status change
+     * Create notification for status change (DEPRECATED - use processSmartNotification instead)
      */
     private function createStatusChangeNotification(array $server, int $previousStatus, int $newStatus): void
     {
-        $serverName = "{$server['name']} (IP: {$server['ip']})";
-        
-        if ($newStatus === 1) {
-            $active_messages = getActiveMessages();
-            $msg = $active_messages[array_rand($active_messages)];
-        } else {
-            $passive_messages = getPassiveMessages();
-            $msg = $passive_messages[array_rand($passive_messages)];
-        }
-        
-        $message = "Sunucu {$serverName} {$msg}.";
-
-        $this->notificationService->addNotification([
-            "server_id" => $server['id'],
-            "message" => $message,
-        ]);
-
-        $this->logger->notice("Server status changed", [
-            'server_name' => $server['name'],
-            'server_ip' => $server['ip'],
-            'previous_status' => $previousStatus,
-            'new_status' => $newStatus,
-            'message' => $message
-        ]);
+        // Bu metod artık kullanılmıyor, akıllı bildirim sistemi kullanılıyor
+        $this->notificationService->processSmartNotification($server, $previousStatus, $newStatus);
     }
 
     /**

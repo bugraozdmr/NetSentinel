@@ -76,5 +76,15 @@
             Yükleniyor...
         </div>
         <ul id="notifications-list" class="space-y-3"></ul>
+        
+        <!-- Load More Button for Server Notifications -->
+        <div class="text-center py-4">
+            <button id="load-more-server-notifications" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors hidden">
+                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+                Daha Fazla Yükle
+            </button>
+        </div>
     </div>
 </div>

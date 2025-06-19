@@ -24,14 +24,17 @@ return [
 
         // Notifications
         "notifications" => "NotificationController@addNotification",
-        "notifications/mark-read" => "NotificationController@markAsReadAll",
     ],
     "PUT" => [
         // Servers
         "servers/edit" => "ServerController@editServer",
 
         // Ports
-        "ports/edit" => "PortController@editPortStatus"
+        "ports/edit" => "PortController@editPortStatus",
+
+        // Notifications
+        "notifications/mark-all-read" => "NotificationController@markAsReadAll",
+        "notifications/read" => "NotificationController@markAsRead",
     ],
     "DELETE" => [
         // Servers
@@ -42,5 +45,9 @@ return [
 
         // Notifications
         "notifications" => "NotificationController@deleteNotification",
+        "notifications/server" => "NotificationController@deleteNotificationsByServerId",
+        "notifications/delete-old" => "NotificationController@deleteOldNotifications",
+        "notifications/delete-all" => "NotificationController@deleteAllNotifications",
+        "notifications/type" => "NotificationController@deleteNotificationsByType",
     ]
 ];
