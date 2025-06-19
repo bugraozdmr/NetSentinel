@@ -34,6 +34,24 @@ $(document).ready(function () {
   let allServers = [];
   let selectedServerId = null;
 
+  // Pagination variables
+  let currentPage = 1;
+  let currentLimit = 100;
+  let currentFilters = {
+    status: '',
+    location: '',
+    panel: 'all',
+    search: ''
+  };
+  let paginationData = {
+    current_page: 1,
+    per_page: 100,
+    total: 0,
+    total_pages: 1,
+    has_next: false,
+    has_prev: false
+  };
+
   function formatDate(str) {
     const date = new Date(str);
     return date.toLocaleString("tr-TR");
@@ -247,23 +265,167 @@ $(document).ready(function () {
     $("#lastUpdate").text("Son güncelleme: " + timeStr);
   }
 
-  function fetchServers() {
+  function fetchServers(page = 1, limit = 100, filters = {}) {
     $loading.removeClass("hidden");
+    $error.addClass("hidden");
+
+    // Build query parameters
+    const params = new URLSearchParams({
+      page: page,
+      limit: limit
+    });
+
+    // Add filters to query parameters
+    if (filters.status && filters.status !== 'all') {
+      params.append('status', filters.status);
+    }
+    if (filters.location && filters.location !== 'all') {
+      params.append('location', filters.location);
+    }
+    if (filters.panel && filters.panel !== 'all') {
+      params.append('panel', filters.panel);
+    }
+    if (filters.search && filters.search.trim()) {
+      params.append('search', filters.search.trim());
+    }
+
     $.ajax({
-      url: `${API_BASE_URL}/servers`,
+      url: `${API_BASE_URL}/servers/paginated?${params.toString()}`,
       method: "GET",
       dataType: "json",
       success: function (data) {
-        allServers = data.servers || [];
-        updateSummaryBar(allServers);
-        applyFilters();
+        const servers = data.servers || [];
+        paginationData = data.pagination || {
+          current_page: 1,
+          per_page: 100,
+          total: 0,
+          total_pages: 1,
+          has_next: false,
+          has_prev: false
+        };
+
+        // Update current page and limit
+        currentPage = paginationData.current_page;
+        currentLimit = paginationData.per_page;
+
+        // Update summary bar with total stats
+        updateSummaryBarWithStats();
+
+        // Render servers and pagination
+        renderPanel(servers);
+        updatePaginationControls();
+
+        // Update filter states
+        updateFilterButtons();
       },
-      error: function () {
-        $error.removeClass("hidden");
+      error: function (xhr) {
+        console.error("Server fetch error:", xhr);
+        $error.removeClass("hidden").text("Sunucular alınırken bir hata oluştu.");
       },
       complete: function () {
         $loading.addClass("hidden");
       },
+    });
+  }
+
+  function updateSummaryBarWithStats() {
+    $.ajax({
+      url: `${API_BASE_URL}/servers/stats`,
+      method: "GET",
+      dataType: "json",
+      success: function (data) {
+        $("#totalServers").text(data.total || 0);
+        $("#activeServers").text(data.active || 0);
+        $("#downServers").text(data.inactive || 0);
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString("tr-TR", { hour12: false });
+        $("#lastUpdate").text("Son güncelleme: " + timeStr);
+      },
+      error: function () {
+        console.error("Stats fetch error");
+      }
+    });
+  }
+
+  function updatePaginationControls() {
+    // Update page info
+    $("#currentPageInfo").text(`Sayfa ${paginationData.current_page}`);
+    $("#totalPagesInfo").text(paginationData.total_pages);
+    $("#totalItemsInfo").text(paginationData.total);
+
+    // Update navigation buttons
+    const hasPrev = paginationData.has_prev;
+    const hasNext = paginationData.has_next;
+
+    $(".page-nav-btn").prop("disabled", false);
+    $("#firstPageBtn, #firstPageBtnBottom").prop("disabled", !hasPrev);
+    $("#prevPageBtn, #prevPageBtnBottom").prop("disabled", !hasPrev);
+    $("#nextPageBtn, #nextPageBtnBottom").prop("disabled", !hasNext);
+    $("#lastPageBtn, #lastPageBtnBottom").prop("disabled", !hasNext);
+
+    // Update limit buttons
+    $(".limit-btn").removeClass("bg-blue-600 text-white border-blue-600 shadow")
+      .addClass("bg-slate-700 text-slate-300 border-slate-600");
+    $(`.limit-btn[data-limit="${currentLimit}"]`)
+      .removeClass("bg-slate-700 text-slate-300 border-slate-600")
+      .addClass("bg-blue-600 text-white border-blue-600 shadow");
+
+    // Generate page numbers
+    generatePageNumbers();
+  }
+
+  function generatePageNumbers() {
+    const current = paginationData.current_page;
+    const total = paginationData.total_pages;
+    const maxVisible = 5;
+
+    let start = Math.max(1, current - Math.floor(maxVisible / 2));
+    let end = Math.min(total, start + maxVisible - 1);
+
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+
+    const pageNumbers = [];
+
+    // Add first page if not visible
+    if (start > 1) {
+      pageNumbers.push(1);
+      if (start > 2) {
+        pageNumbers.push('...');
+      }
+    }
+
+    // Add visible pages
+    for (let i = start; i <= end; i++) {
+      pageNumbers.push(i);
+    }
+
+    // Add last page if not visible
+    if (end < total) {
+      if (end < total - 1) {
+        pageNumbers.push('...');
+      }
+      pageNumbers.push(total);
+    }
+
+    // Render page numbers
+    const $pageNumbers = $("#pageNumbers, #pageNumbersBottom");
+    $pageNumbers.empty();
+
+    pageNumbers.forEach(page => {
+      if (page === '...') {
+        $pageNumbers.append('<span class="px-3 py-2 text-slate-400">...</span>');
+      } else {
+        const isActive = page === current;
+        const btnClass = isActive
+          ? "px-3 py-2 rounded-lg bg-blue-600 text-white border border-blue-600 text-sm font-semibold"
+          : "px-3 py-2 rounded-lg bg-slate-700 text-slate-300 border border-slate-600 text-sm font-semibold hover:bg-slate-600";
+
+        $pageNumbers.append(`
+          <button class="page-number-btn ${btnClass}" data-page="${page}">${page}</button>
+        `);
+      }
     });
   }
 
@@ -846,55 +1008,12 @@ $(document).ready(function () {
   });
 
   // Çoklu filtreleme sistemi
-  let currentFilters = {
-    status: 'all',
-    location: 'all',
-    panel: 'all',
-    search: ''
-  };
-
   function applyFilters() {
-    let filtered = allServers;
+    // Reset to first page when filters change
+    currentPage = 1;
 
-    // Durum filtresi
-    if (currentFilters.status !== 'all') {
-      filtered = filtered.filter(server => {
-        if (currentFilters.status === 'active') {
-          return server.is_active === 1;
-        } else if (currentFilters.status === 'inactive') {
-          return server.is_active === 0;
-        }
-        return true;
-      });
-    }
-
-    // Lokasyon filtresi
-    if (currentFilters.location !== 'all') {
-      filtered = filtered.filter(server =>
-        (server.location || '').toLowerCase() === currentFilters.location.toLowerCase()
-      );
-    }
-
-    // Panel filtresi
-    if (currentFilters.panel !== 'all') {
-      filtered = filtered.filter(server =>
-        (server.panel || '').toLowerCase() === currentFilters.panel.toLowerCase()
-      );
-    }
-
-    // Arama filtresi
-    if (currentFilters.search) {
-      const searchTerm = currentFilters.search.toLowerCase();
-      filtered = filtered.filter(server =>
-        [server.ip, server.name, server.location, server.panel].some(val =>
-          (val || '').toLowerCase().includes(searchTerm)
-        )
-      );
-    }
-
-    updateSummaryBar(filtered);
-    renderPanel(filtered);
-    updateFilterButtons();
+    // Fetch servers with current filters
+    fetchServers(currentPage, currentLimit, currentFilters);
   }
 
   function updateFilterButtons() {
@@ -910,44 +1029,24 @@ $(document).ready(function () {
     $('#panelFilter').val(currentFilters.panel);
   }
 
-  // Durum filtreleme
-  $('.status-filter-btn').on('click', function () {
-    currentFilters.status = $(this).data('status');
-    applyFilters();
-  });
-
-  // Lokasyon filtreleme
-  $('.location-filter-btn').on('click', function () {
-    currentFilters.location = $(this).data('location');
-    applyFilters();
-  });
-
-  // Panel filtreleme
-  $('#panelFilter').on('change', function () {
-    currentFilters.panel = $(this).val();
-    applyFilters();
-  });
-
-  // Arama filtreleme
-  $('#searchInput').on('input', function () {
-    currentFilters.search = $(this).val();
-    applyFilters();
-  });
-
-  // Filtreleri temizle
   function clearAllFilters() {
     currentFilters = {
-      status: 'all',
-      location: 'all',
+      status: '',
+      location: '',
       panel: 'all',
       search: ''
     };
-    $('#searchInput').val('');
-    applyFilters();
-  }
 
-  // Filtreleri Temizle butonunu sadece HTML'deki butona bağla
-  $('#clearFiltersBtn').on('click', clearAllFilters);
+    // Reset form elements
+    $('#searchInput').val('');
+    $('#panelFilter').val('all');
+
+    // Reset to first page
+    currentPage = 1;
+
+    // Fetch servers without filters
+    fetchServers(currentPage, currentLimit, currentFilters);
+  }
 
   //? sayfayı yenile belirlitilen aralıklarda
   if (
@@ -1262,6 +1361,94 @@ $(document).ready(function () {
       </div>
     `);
   }
+
+  // Event Handlers for Pagination and Filtering
+
+  // Limit buttons (50, 100, 200)
+  $(document).on('click', '.limit-btn', function () {
+    const newLimit = parseInt($(this).data('limit'));
+    if (newLimit !== currentLimit) {
+      currentLimit = newLimit;
+      currentPage = 1; // Reset to first page when changing limit
+      fetchServers(currentPage, currentLimit, currentFilters);
+    }
+  });
+
+  // Page navigation buttons
+  $(document).on('click', '#firstPageBtn, #firstPageBtnBottom', function () {
+    if (paginationData.has_prev) {
+      fetchServers(1, currentLimit, currentFilters);
+    }
+  });
+
+  $(document).on('click', '#prevPageBtn, #prevPageBtnBottom', function () {
+    if (paginationData.has_prev) {
+      fetchServers(currentPage - 1, currentLimit, currentFilters);
+    }
+  });
+
+  $(document).on('click', '#nextPageBtn, #nextPageBtnBottom', function () {
+    if (paginationData.has_next) {
+      fetchServers(currentPage + 1, currentLimit, currentFilters);
+    }
+  });
+
+  $(document).on('click', '#lastPageBtn, #lastPageBtnBottom', function () {
+    if (paginationData.has_next) {
+      fetchServers(paginationData.total_pages, currentLimit, currentFilters);
+    }
+  });
+
+  // Page number buttons
+  $(document).on('click', '.page-number-btn', function () {
+    const page = parseInt($(this).data('page'));
+    if (page !== currentPage) {
+      fetchServers(page, currentLimit, currentFilters);
+    }
+  });
+
+  // Filter event handlers
+  $('.status-filter-btn').on('click', function () {
+    const status = $(this).data('status');
+    if (status === 'all') {
+      currentFilters.status = '';
+    } else {
+      currentFilters.status = status;
+    }
+    applyFilters();
+  });
+
+  $('.location-filter-btn').on('click', function () {
+    const location = $(this).data('location');
+    if (location === 'all') {
+      currentFilters.location = '';
+    } else {
+      currentFilters.location = location;
+    }
+    applyFilters();
+  });
+
+  $('#panelFilter').on('change', function () {
+    const panel = $(this).val();
+    currentFilters.panel = panel;
+    applyFilters();
+  });
+
+  // Search with debounce
+  let searchTimeout;
+  $('#searchInput').on('input', function () {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      currentFilters.search = $(this).val();
+      applyFilters();
+    }, 300);
+  });
+
+  // Clear filters button
+  $('#clearFiltersBtn').on('click', clearAllFilters);
+
+  // Initial load
+  fetchServers(currentPage, currentLimit, currentFilters);
 
   updateNotificationCount();
 });

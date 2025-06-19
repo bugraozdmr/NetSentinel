@@ -151,4 +151,105 @@ class ServerModel
             throw new DatabaseException("Failed to update server status", ['details' => $e->getMessage()]);
         }
     }
+
+    /**
+     * Get servers with pagination and filtering
+     */
+    public function getServersWithPagination($page = 1, $limit = 100, $filters = [])
+    {
+        try {
+            $offset = ($page - 1) * $limit;
+            $whereConditions = [];
+            $params = [];
+
+            // Apply filters
+            if (!empty($filters['status'])) {
+                if ($filters['status'] === 'active') {
+                    $whereConditions[] = "is_active = 1";
+                } elseif ($filters['status'] === 'inactive') {
+                    $whereConditions[] = "is_active = 0";
+                }
+            }
+
+            if (!empty($filters['location']) && $filters['location'] !== 'all') {
+                $whereConditions[] = "location = :location";
+                $params['location'] = $filters['location'];
+            }
+
+            if (!empty($filters['panel']) && $filters['panel'] !== 'all') {
+                $whereConditions[] = "panel = :panel";
+                $params['panel'] = $filters['panel'];
+            }
+
+            if (!empty($filters['search'])) {
+                $whereConditions[] = "(name LIKE :search OR ip LIKE :search OR location LIKE :search)";
+                $params['search'] = '%' . $filters['search'] . '%';
+            }
+
+            $whereClause = '';
+            if (!empty($whereConditions)) {
+                $whereClause = 'WHERE ' . implode(' AND ', $whereConditions);
+            }
+
+            // Get total count
+            $countQuery = "SELECT COUNT(*) as total FROM servers " . $whereClause;
+            $countStmt = $this->pdo->prepare($countQuery);
+            $countStmt->execute($params);
+            $totalCount = $countStmt->fetch()['total'];
+
+            // Get paginated results
+            $query = "SELECT * FROM servers " . $whereClause . " ORDER BY id DESC LIMIT :limit OFFSET :offset";
+            $stmt = $this->pdo->prepare($query);
+            
+            // Bind parameters
+            foreach ($params as $key => $value) {
+                $stmt->bindValue(':' . $key, $value);
+            }
+            $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+            
+            $stmt->execute();
+            $servers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'servers' => $servers,
+                'pagination' => [
+                    'current_page' => (int)$page,
+                    'per_page' => (int)$limit,
+                    'total' => (int)$totalCount,
+                    'total_pages' => ceil($totalCount / $limit),
+                    'has_next' => $page < ceil($totalCount / $limit),
+                    'has_prev' => $page > 1
+                ]
+            ];
+        } catch (PDOException $e) {
+            throw new DatabaseException("Failed to fetch servers with pagination", ['details' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get total count for summary statistics
+     */
+    public function getServerStats()
+    {
+        try {
+            $stats = [];
+            
+            // Total servers
+            $stmt = $this->pdo->query("SELECT COUNT(*) as total FROM servers");
+            $stats['total'] = $stmt->fetch()['total'];
+            
+            // Active servers
+            $stmt = $this->pdo->query("SELECT COUNT(*) as active FROM servers WHERE is_active = 1");
+            $stats['active'] = $stmt->fetch()['active'];
+            
+            // Inactive servers
+            $stmt = $this->pdo->query("SELECT COUNT(*) as inactive FROM servers WHERE is_active = 0");
+            $stats['inactive'] = $stmt->fetch()['inactive'];
+            
+            return $stats;
+        } catch (PDOException $e) {
+            throw new DatabaseException("Failed to fetch server statistics", ['details' => $e->getMessage()]);
+        }
+    }
 }

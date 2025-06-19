@@ -15,7 +15,18 @@ class RequestHandler
     {
         $method = $_SERVER['REQUEST_METHOD'];
         $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        $uri = str_replace('/netsentinel/api/', '', $uri);
+        
+        // Remove the base path from URI
+        $basePath = '/NetSentinel/api/app/public/';
+        if (strpos($uri, $basePath) === 0) {
+            $uri = substr($uri, strlen($basePath));
+        }
+        
+        // Get route from query parameter if available
+        $requestedRoute = $_GET['route'] ?? null;
+        if ($requestedRoute) {
+            $uri = $requestedRoute;
+        }
 
         $resolved = $this->router->resolve($method, $uri);
 

@@ -4,6 +4,8 @@ return [
     "GET" => [
         // Servers
         "servers" => "ServerController@getServers",
+        "servers/paginated" => "ServerController@getServersWithPagination",
+        "servers/stats" => "ServerController@getServerStats",
         "server" => "ServerController@getServer",
         "check" => "ServerController@checkAll",
 

@@ -51,6 +51,35 @@ class ServerService
         return $servers;
     }
 
+    public function getServersWithPagination($page = 1, $limit = 100, $filters = [])
+    {
+        $result = $this->serverModel->getServersWithPagination($page, $limit, $filters);
+        
+        // Add ports to each server
+        foreach ($result['servers'] as &$server) {
+            $ports = $this->portService->getPortsByServer((int)$server['id']);
+            $server['ports'] = $ports;
+        }
+
+        $this->logger->info("Retrieved servers with pagination", [
+            'page' => $page,
+            'limit' => $limit,
+            'count' => count($result['servers']),
+            'total' => $result['pagination']['total']
+        ]);
+        
+        return $result;
+    }
+
+    public function getServerStats()
+    {
+        $stats = $this->serverModel->getServerStats();
+        
+        $this->logger->info("Retrieved server statistics", $stats);
+        
+        return $stats;
+    }
+
     public function getServerByIdWithStatus($id)
     {
         $server = $this->serverModel->getServerById($id);

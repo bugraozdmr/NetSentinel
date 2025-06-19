@@ -42,16 +42,107 @@
         <!-- Filtreleri Temizle: Tek büyük buton, sağda -->
         <button id="clearFiltersBtn" class="ml-auto px-6 py-2 rounded-full bg-red-600 text-white text-base font-semibold transition-all hover:bg-red-700">Filtreleri Temizle</button>
     </div>
-    <!-- Kart Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8" id="serverPanelGrid">
-        <!-- Dinamik kartlar buraya gelecek -->
+
+    <!-- Pagination ve Eleman Sayısı Kontrolleri -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6 p-4 bg-slate-800 rounded-xl max-w-full overflow-x-auto">
+        <!-- Sol: Eleman Sayısı Seçici -->
+        <div class="flex items-center gap-3">
+            <span class="text-slate-300 text-sm font-medium">Sayfa başına:</span>
+            <div class="flex gap-2">
+                <button id="limit50Btn" class="limit-btn px-4 py-2 rounded-lg bg-slate-700 text-slate-300 border border-slate-600 text-sm font-semibold transition-all hover:bg-slate-600" data-limit="50">50</button>
+                <button id="limit100Btn" class="limit-btn px-4 py-2 rounded-lg bg-blue-600 text-white border border-blue-600 text-sm font-semibold transition-all shadow" data-limit="100">100</button>
+                <button id="limit200Btn" class="limit-btn px-4 py-2 rounded-lg bg-slate-700 text-slate-300 border border-slate-600 text-sm font-semibold transition-all hover:bg-slate-600" data-limit="200">200</button>
+            </div>
+        </div>
+
+        <!-- Orta: Sayfa Bilgisi -->
+        <div class="flex items-center gap-4">
+            <span class="text-slate-300 text-sm">
+                <span id="currentPageInfo">Sayfa 1</span> / <span id="totalPagesInfo">1</span>
+            </span>
+            <span class="text-slate-400 text-sm">
+                Toplam <span id="totalItemsInfo">0</span> sunucu
+            </span>
+        </div>
+
+        <!-- Sağ: Sayfa Navigasyonu -->
+        <div class="flex items-center gap-2">
+            <button id="firstPageBtn" class="page-nav-btn px-3 py-2 rounded-lg bg-slate-700 text-slate-300 border border-slate-600 text-sm font-semibold transition-all hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+                </svg>
+            </button>
+            <button id="prevPageBtn" class="page-nav-btn px-3 py-2 rounded-lg bg-slate-700 text-slate-300 border border-slate-600 text-sm font-semibold transition-all hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </button>
+            
+            <!-- Sayfa Numaraları -->
+            <div id="pageNumbers" class="flex gap-1">
+                <!-- Dinamik sayfa numaraları buraya gelecek -->
+            </div>
+            
+            <button id="nextPageBtn" class="page-nav-btn px-3 py-2 rounded-lg bg-slate-700 text-slate-300 border border-slate-600 text-sm font-semibold transition-all hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </button>
+            <button id="lastPageBtn" class="page-nav-btn px-3 py-2 rounded-lg bg-slate-700 text-slate-300 border border-slate-600 text-sm font-semibold transition-all hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7"></path>
+                </svg>
+            </button>
+        </div>
     </div>
+
+    <!-- Kart Grid -->
+    <div class="w-full px-2">
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8" id="serverPanelGrid">
+          <!-- Dinamik kartlar buraya gelecek -->
+      </div>
+    </div>
+    
     <div id="loading" class="flex justify-center my-6 hidden">
         <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-blue-500"></div>
     </div>
     <div id="error" class="text-center text-red-600 hidden mt-4">
         Sunucular alınırken bir hata oluştu.
     </div>
+    
+    <!-- Alt Pagination -->
+    <div class="flex items-center justify-center gap-4 mt-8 p-4 bg-slate-800 rounded-xl max-w-full overflow-x-auto">
+        <button id="firstPageBtnBottom" class="page-nav-btn px-4 py-2 rounded-lg bg-slate-700 text-slate-300 border border-slate-600 text-sm font-semibold transition-all hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+            </svg>
+            İlk
+        </button>
+        <button id="prevPageBtnBottom" class="page-nav-btn px-4 py-2 rounded-lg bg-slate-700 text-slate-300 border border-slate-600 text-sm font-semibold transition-all hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            Önceki
+        </button>
+        
+        <div id="pageNumbersBottom" class="flex gap-1">
+            <!-- Dinamik sayfa numaraları buraya gelecek -->
+        </div>
+        
+        <button id="nextPageBtnBottom" class="page-nav-btn px-4 py-2 rounded-lg bg-slate-700 text-slate-300 border border-slate-600 text-sm font-semibold transition-all hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            Sonraki
+            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+        </button>
+        <button id="lastPageBtnBottom" class="page-nav-btn px-4 py-2 rounded-lg bg-slate-700 text-slate-300 border border-slate-600 text-sm font-semibold transition-all hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            Son
+            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7"></path>
+            </svg>
+        </button>
+    </div>
+
     <div id="deleteModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-500/75">
         <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
