@@ -29,7 +29,7 @@
       </button>
     </div>
 
-    <div id="notifications-list" class="space-y-4 animate-fade-in px-4">
+    <div id="notifications-list" class="space-y-6 animate-fade-in px-4 pb-4">
       <!-- Notifications -->
       <div class="flex flex-col items-center justify-center bg-slate-800/80 rounded-2xl shadow-xl p-6 text-slate-300">
         <svg class="w-8 h-8 mb-2 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z"/></svg>

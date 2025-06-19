@@ -2,6 +2,7 @@ import { API_BASE_URL } from '../config.js';
 import { showErrorToast, showSuccessToast } from '../helpers/toast.js';
 import { escapeHtml, formatDate } from '../helpers/dom.js';
 import { defineGlobalAjaxErrorHandler } from '../helpers/ajax.js';
+import { createModernNotificationCard } from '../helpers/notificationCard.js';
 
 let currentPage = 1;
 let hasMoreNotifications = true;
@@ -59,7 +60,17 @@ async function loadNotifications(reset = true) {
             if (reset) notificationsList.innerHTML = '';
             if (data.notifications && data.notifications.length > 0) {
                 data.notifications.forEach(notification => {
-                    const notificationElement = createNotificationElement(notification);
+                    const notificationElement = createModernNotificationCard(notification, {
+                        showActions: true,
+                        compact: false,
+                        onDelete: async (id) => {
+                            currentNotificationId = id;
+                            if (deleteSingleModal) deleteSingleModal.classList.remove('hidden');
+                        },
+                        onMarkRead: async (id) => {
+                            await markAsRead(id);
+                        }
+                    });
                     notificationsList.appendChild(notificationElement);
                 });
                 hasMoreNotifications = data.notifications.length === 10;
@@ -83,15 +94,6 @@ async function loadMoreNotifications() {
     await loadNotifications(false);
 }
 
-function createNotificationElement(notification) {
-    const div = document.createElement('div');
-    div.className = `bg-slate-800/80 rounded-2xl shadow-xl p-6 border-l-4 ${notification.is_read ? 'border-slate-600' : 'border-blue-500'} transition-all duration-300 hover:bg-slate-700/80`;
-    const statusClass = notification.is_read ? 'text-slate-400' : 'text-slate-200';
-    const statusIcon = notification.is_read ? 'text-slate-500' : 'text-blue-400';
-    div.innerHTML = `<div class="flex justify-between items-start mb-3"><div class="flex items-center gap-3"><div class="flex-shrink-0"><svg class="w-6 h-6 ${statusIcon}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4 19h6v-6H4v6zM4 5h6V1H4v4zM14 5h6V1h-6v4z"/></svg></div><div><h3 class="text-lg font-semibold ${statusClass}">${escapeHtml(notification.title)}</h3><p class="text-sm text-slate-400">${formatDate(notification.created_at)}</p></div></div><div class="flex items-center gap-2">${!notification.is_read ? `<button onclick="markAsRead(${notification.id})" class="text-blue-400 hover:text-blue-300 transition-colors" title="Okundu işaretle"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></button>` : ''}<button onclick="showDeleteSingleModal(${notification.id})" class="text-red-400 hover:text-red-300 transition-colors" title="Sil"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div></div><div class="text-slate-300 leading-relaxed">${escapeHtml(notification.message)}</div>${notification.server_name ? `<div class="mt-3 pt-3 border-t border-slate-700"><span class="text-sm text-slate-400">Sunucu: </span><span class="text-sm text-blue-400">${escapeHtml(notification.server_name)}</span></div>` : ''}`;
-    return div;
-}
-
 window.showDeleteOldModal = function () { if (deleteOldModal) deleteOldModal.classList.remove('hidden'); };
 window.hideDeleteOldModal = function () { if (deleteOldModal) deleteOldModal.classList.add('hidden'); };
 window.showDeleteAllModal = function () { if (deleteAllModal) deleteAllModal.classList.remove('hidden'); };
@@ -108,15 +110,26 @@ async function markAsRead(notificationId) {
         const response = await fetch(`${API_BASE_URL}/notifications/read/${notificationId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' } });
         const data = await response.json();
         if (response.ok) {
-            const notificationElement = document.querySelector(`[onclick*="markAsRead(${notificationId})"]`).closest('.bg-slate-800');
+            // Kartı bul ve güncelle
+            const notificationElement = document.querySelector(`[data-notification-id="${notificationId}"]`) ||
+                document.querySelector(`.notification-card:has([onclick*="markAsRead(${notificationId})"])`);
             if (notificationElement) {
-                notificationElement.classList.remove('border-blue-500');
-                notificationElement.classList.add('border-slate-600');
-                notificationElement.querySelector('.text-blue-400').classList.remove('text-blue-400');
-                notificationElement.querySelector('.text-blue-400').classList.add('text-slate-500');
-                notificationElement.querySelector('.text-slate-200').classList.remove('text-slate-200');
-                notificationElement.querySelector('.text-slate-200').classList.add('text-slate-400');
-                const markReadBtn = notificationElement.querySelector(`[onclick*="markAsRead(${notificationId})"]`);
+                notificationElement.classList.remove('border-blue-500/60', 'bg-gradient-to-br', 'from-slate-800/95', 'to-blue-900/20', 'hover:shadow-blue-500/20');
+                notificationElement.classList.add('border-slate-700/60');
+
+                // Badge'i kaldır
+                const badge = notificationElement.querySelector('.absolute');
+                if (badge) badge.remove();
+
+                // Başlık rengini güncelle
+                const title = notificationElement.querySelector('h3');
+                if (title) {
+                    title.classList.remove('text-slate-100');
+                    title.classList.add('text-slate-300');
+                }
+
+                // Okundu butonunu kaldır
+                const markReadBtn = notificationElement.querySelector('[title="Okundu işaretle"]');
                 if (markReadBtn) markReadBtn.remove();
             }
             showSuccessToast('Bildirim okundu olarak işaretlendi');

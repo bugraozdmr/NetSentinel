@@ -1,4 +1,5 @@
 import { API_BASE_URL, APP_NAME, INTERVAL_TIME } from "./config.js";
+import { createModernNotificationCard } from "./helpers/notificationCard.js";
 
 $(document).ready(function () {
   function updateNotificationCount() {
@@ -498,7 +499,7 @@ $(document).ready(function () {
         }
 
         response.notifications.forEach((notification) => {
-          const notificationHtml = createNotificationHtml(notification);
+          const notificationHtml = createUnifiedNotificationHtml(notification);
           $list.append(notificationHtml);
         });
 
@@ -551,7 +552,7 @@ $(document).ready(function () {
 
         if (data.notifications && data.notifications.length > 0) {
           data.notifications.forEach(function (notif) {
-            const notificationHtml = createServerNotificationHtml(notif);
+            const notificationHtml = createUnifiedNotificationHtml(notif, true);
             $list.append(notificationHtml);
           });
 
@@ -582,142 +583,219 @@ $(document).ready(function () {
       });
   }
 
-  function createNotificationHtml(notification) {
-    const isUnread = notification.status === "unread";
-    const borderClass = isUnread ? "border-blue-600" : "border-slate-600";
-    const bgClass = isUnread ? "bg-slate-800/90" : "bg-slate-800/80";
-    const newBadge = isUnread
-      ? '<span class="ml-4 inline-block text-xs font-semibold text-blue-300 bg-blue-900/50 px-2 py-1 rounded">Yeni</span>'
-      : "";
-
-    // Bildirim türüne göre icon ve renk belirleme
-    let iconClass = "text-blue-400";
-    let iconSvg = "📣";
-    let typeBadge = "";
-
-    if (notification.notification_type) {
-      switch (notification.notification_type) {
-        case 'first_down':
-          iconClass = "text-red-400";
-          iconSvg = "⚠️";
-          typeBadge = `<span class='inline-block text-xs font-semibold text-red-300 bg-red-900/50 px-2 py-1 rounded ml-2'>İlk Düşüş</span>`;
-          break;
-        case 'repeated_down':
-          iconClass = "text-orange-400";
-          iconSvg = "🔄";
-          typeBadge = `<span class='inline-block text-xs font-semibold text-orange-300 bg-orange-900/50 px-2 py-1 rounded ml-2'>Tekrar Düşüş</span>`;
-          break;
-        case 'long_term_down':
-          iconClass = "text-red-500";
-          iconSvg = "🚨";
-          typeBadge = `<span class='inline-block text-xs font-semibold text-red-300 bg-red-900/50 px-2 py-1 rounded ml-2'>Uzun Süreli Düşüş</span>`;
-          break;
-        case 'status_change':
-        default:
-          iconClass = "text-green-400";
-          iconSvg = "✅";
-          typeBadge = `<span class='inline-block text-xs font-semibold text-green-300 bg-green-900/50 px-2 py-1 rounded ml-2'>Durum Değişikliği</span>`;
-          break;
-      }
-    }
-
-    const date = new Date(notification.created_at);
-    const formattedDate = date.toLocaleDateString("tr-TR", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+  // Bildirimleri tek tipte render eden fonksiyon - Modern kart kullanımı
+  function createUnifiedNotificationHtml(notification, isServerDetail = false) {
+    const card = createModernNotificationCard(notification, {
+      isServerDetail: isServerDetail,
+      showActions: true,
+      compact: isServerDetail
     });
 
-    return `
-      <div class="flex items-start ${bgClass} shadow rounded-xl p-4 transition hover:shadow-lg border-l-4 ${borderClass}">
-        <div class="text-2xl mr-4 mt-1 ${iconClass}">${iconSvg}</div>
-        <div class="flex-1">
-          <p class="text-slate-200 font-medium">${notification.message} ${typeBadge}</p>
-          <p class="text-sm text-slate-400 mt-1">${formattedDate}</p>
-        </div>
-        <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          ${newBadge}
-          <button onclick="showDeleteSingleModal(${notification.id})" class="text-red-400 hover:text-red-300 p-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-            </svg>
-          </button>
-        </div>
-      </div>
-    `;
+    if (isServerDetail) {
+      const li = document.createElement('li');
+      li.appendChild(card);
+      return li.outerHTML;
+    } else {
+      return card.outerHTML;
+    }
   }
 
-  function createServerNotificationHtml(notif) {
-    const isUnread = notif.status === "unread";
-    const border = isUnread
-      ? "border-2 border-blue-400 bg-gradient-to-br from-blue-900/80 to-blue-800/80"
-      : "border border-slate-700 bg-slate-800/80";
-    const shadow = isUnread
-      ? "shadow-xl hover:shadow-blue-400/40"
-      : "shadow-md hover:shadow-lg";
-    const scale = isUnread ? "hover:scale-[1.025]" : "hover:scale-[1.01]";
-    const badge = isUnread
-      ? `<span class='absolute -top-3 left-3 bg-gradient-to-r from-blue-500 to-blue-400 text-white text-xs font-bold px-3 py-1 rounded-full shadow animate-pulse z-10'>Yeni</span>`
-      : "";
-    let iconClass = "text-blue-400";
-    let iconSvg = `<svg class='w-6 h-6' fill='none' stroke='currentColor' stroke-width='2' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' d='M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' /></svg>`;
-    let typeBadge = "";
-    if (notif.notification_type) {
-      switch (notif.notification_type) {
-        case 'first_down':
-          iconClass = "text-red-400";
-          iconSvg = `<svg class='w-6 h-6' fill='none' stroke='currentColor' stroke-width='2' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z' /></svg>`;
-          typeBadge = `<span class='inline-block text-xs font-semibold text-red-300 bg-red-900/50 px-2 py-1 rounded ml-2'>İlk Düşüş</span>`;
-          break;
-        case 'repeated_down':
-          iconClass = "text-orange-400";
-          iconSvg = `<svg class='w-6 h-6' fill='none' stroke='currentColor' stroke-width='2' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' d='M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>`;
-          typeBadge = `<span class='inline-block text-xs font-semibold text-orange-300 bg-orange-900/50 px-2 py-1 rounded ml-2'>Tekrar Düşüş</span>`;
-          break;
-        case 'long_term_down':
-          iconClass = "text-red-500";
-          iconSvg = `<svg class='w-6 h-6' fill='none' stroke='currentColor' stroke-width='2' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z' /></svg>`;
-          typeBadge = `<span class='inline-block text-xs font-semibold text-red-300 bg-red-900/50 px-2 py-1 rounded ml-2'>Uzun Süreli Düşüş</span>`;
-          break;
-        case 'status_change':
-        default:
-          iconClass = "text-green-400";
-          iconSvg = `<svg class='w-6 h-6' fill='none' stroke='currentColor' stroke-width='2' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>`;
-          typeBadge = `<span class='inline-block text-xs font-semibold text-green-300 bg-green-900/50 px-2 py-1 rounded ml-2'>Durum Değişikliği</span>`;
-          break;
-      }
+  // Server detail sayfası için özel silme fonksiyonu
+  async function deleteServerNotification(notificationId) {
+    if (!confirm('Bu bildirimi silmek istediğinizden emin misiniz?')) {
+      return;
     }
-    const icon = `<span class='flex items-center justify-center w-10 h-10 rounded-full bg-slate-700/80 ${iconClass} shadow-lg mr-4'>${iconSvg}</span>`;
-    const msg = `<span class='block text-base md:text-lg font-semibold text-slate-100 mb-1'>${notif.message} ${typeBadge}</span>`;
-    const time = `<span class='block text-xs text-slate-400 text-right mt-2'>${new Date(notif.created_at).toLocaleString()}</span>`;
-    // Sil ve okundu butonları
-    const actions = `
-      <div class="flex flex-col gap-2 ml-4">
-        <button class="delete-server-notification-btn text-red-400 hover:text-red-300 p-1" data-id="${notif.id}" title="Sil">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-          </svg>
-        </button>
-        ${isUnread ? `<button class="mark-read-server-notification-btn text-blue-400 hover:text-blue-300 p-1" data-id="${notif.id}" title="Okundu olarak işaretle">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-          </svg>
-        </button>` : ''}
-      </div>
-    `;
-    return `
-      <li class="relative flex items-start gap-3 p-5 md:p-6 rounded-2xl ${border} ${shadow} ${scale} transition-all duration-200 cursor-pointer group overflow-hidden">
-        ${badge}
-        ${icon}
-        <div class="flex-1 min-w-0">
-          ${msg}
-          ${time}
-        </div>
-        ${actions}
-      </li>
-    `;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        // Kartı animasyonla kaldır
+        const card = document.querySelector(`[data-notification-id="${notificationId}"]`) ||
+          document.querySelector(`.notification-card:has([data-id="${notificationId}"])`);
+        if (card) {
+          card.style.transition = 'all 0.3s ease';
+          card.style.transform = 'translateX(100%)';
+          card.style.opacity = '0';
+
+          setTimeout(() => {
+            card.remove();
+          }, 300);
+        }
+
+        showSuccessToast('Bildirim silindi');
+      } else {
+        const data = await response.json();
+        showErrorToast(data.message || 'Bildirim silinirken hata oluştu');
+      }
+    } catch (error) {
+      showErrorToast('Bildirim silinirken hata oluştu');
+    }
+  }
+
+  // Server detail sayfası için özel okundu işaretleme fonksiyonu
+  async function markServerNotificationAsRead(notificationId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/notifications/read/${notificationId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        // Kartı bul ve güncelle
+        const card = document.querySelector(`[data-notification-id="${notificationId}"]`) ||
+          document.querySelector(`.notification-card:has([data-id="${notificationId}"])`);
+        if (card) {
+          card.classList.remove('border-blue-500/60', 'bg-gradient-to-br', 'from-slate-800/95', 'to-blue-900/20', 'hover:shadow-blue-500/20');
+          card.classList.add('border-slate-700/60');
+
+          // Badge'i kaldır
+          const badge = card.querySelector('.absolute');
+          if (badge) badge.remove();
+
+          // Başlık rengini güncelle
+          const title = card.querySelector('h3');
+          if (title) {
+            title.classList.remove('text-slate-100');
+            title.classList.add('text-slate-300');
+          }
+
+          // Okundu butonunu kaldır
+          const markReadBtn = card.querySelector('[title="Okundu olarak işaretle"]');
+          if (markReadBtn) markReadBtn.remove();
+        }
+
+        showSuccessToast('Bildirim okundu olarak işaretlendi');
+      } else {
+        const data = await response.json();
+        showErrorToast(data.message || 'Bildirim işaretlenirken hata oluştu');
+      }
+    } catch (error) {
+      showErrorToast('Bildirim işaretlenirken hata oluştu');
+    }
+  }
+
+  // Ana sayfa için okundu işaretleme fonksiyonu
+  async function markAsRead(notificationId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/notifications/read/${notificationId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        // Kartı bul ve güncelle
+        const card = document.querySelector(`[data-notification-id="${notificationId}"]`);
+        if (card) {
+          card.classList.remove('border-blue-500/60', 'bg-gradient-to-br', 'from-slate-800/95', 'to-blue-900/20', 'hover:shadow-blue-500/20');
+          card.classList.add('border-slate-700/60');
+
+          // Badge'i kaldır
+          const badge = card.querySelector('.absolute');
+          if (badge) badge.remove();
+
+          // Başlık rengini güncelle
+          const title = card.querySelector('h3');
+          if (title) {
+            title.classList.remove('text-slate-100');
+            title.classList.add('text-slate-300');
+          }
+
+          // Okundu butonunu kaldır
+          const markReadBtn = card.querySelector('[title="Okundu olarak işaretle"]');
+          if (markReadBtn) markReadBtn.remove();
+        }
+
+        showSuccessToast('Bildirim okundu olarak işaretlendi');
+      } else {
+        const data = await response.json();
+        showErrorToast(data.message || 'Bildirim işaretlenirken hata oluştu');
+      }
+    } catch (error) {
+      showErrorToast('Bildirim işaretlenirken hata oluştu');
+    }
+  }
+
+  // Modal fonksiyonları
+  window.showDeleteSingleModal = function (id) {
+    window.currentNotificationId = id;
+    const modal = document.getElementById('deleteSingleModal');
+    if (modal) modal.classList.remove('hidden');
+  };
+
+  window.hideDeleteSingleModal = function () {
+    const modal = document.getElementById('deleteSingleModal');
+    if (modal) modal.classList.add('hidden');
+    window.currentNotificationId = null;
+  };
+
+  window.confirmDeleteSingle = async function () {
+    if (!window.currentNotificationId) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/notifications/${window.currentNotificationId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        // Kartı animasyonla kaldır
+        const card = document.querySelector(`[data-notification-id="${window.currentNotificationId}"]`);
+        if (card) {
+          card.style.transition = 'all 0.3s ease';
+          card.style.transform = 'translateX(100%)';
+          card.style.opacity = '0';
+
+          setTimeout(() => {
+            card.remove();
+          }, 300);
+        }
+
+        window.hideDeleteSingleModal();
+        showSuccessToast('Bildirim silindi');
+      } else {
+        const data = await response.json();
+        showErrorToast(data.message || 'Bildirim silinirken hata oluştu');
+      }
+    } catch (error) {
+      showErrorToast('Bildirim silinirken hata oluştu');
+    }
+  };
+
+  // Toast fonksiyonları
+  function showSuccessToast(message) {
+    const toast = document.getElementById('successToast');
+    const messageEl = document.getElementById('successToastMessage');
+    if (toast && messageEl) {
+      messageEl.textContent = message;
+      toast.classList.remove('hidden', 'translate-x-full');
+      toast.classList.add('translate-x-0');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-x-0');
+        toast.classList.add('translate-x-full');
+        setTimeout(() => toast.classList.add('hidden'), 300);
+      }, 3000);
+    }
+  }
+
+  function showErrorToast(message) {
+    const toast = document.getElementById('errorToast');
+    const messageEl = document.getElementById('errorToastMessage');
+    if (toast && messageEl) {
+      messageEl.textContent = message;
+      toast.classList.remove('hidden', 'translate-x-full');
+      toast.classList.add('translate-x-0');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-x-0');
+        toast.classList.add('translate-x-full');
+        setTimeout(() => toast.classList.add('hidden'), 300);
+      }, 3000);
+    }
   }
 
   // Load more butonları
@@ -728,9 +806,42 @@ $(document).ready(function () {
   });
 
   $("#load-more-server-notifications").on("click", function () {
-    if (hasMoreServerNotifications) {
-      const serverId = window.location.pathname.split('/').pop();
-      fetchNotifications(serverId, currentServerNotificationPage + 1, true);
+    if (window.hasMoreServerNotifications) {
+      const serverId = window.currentServerId || window.location.pathname.split('/').pop();
+      loadServerNotifications(serverId, window.currentServerNotificationPage + 1, true);
+    }
+  });
+
+  // Bildirim butonları için event handler'ları
+  $(document).on('click', '.notification-card button[title="Sil"]', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const card = $(this).closest('.notification-card');
+    const notificationId = card.attr('data-notification-id');
+    if (notificationId) {
+      if (window.currentServerId) {
+        // Server detail sayfası için
+        deleteServerNotification(notificationId);
+      } else {
+        // Ana sayfa için modal göster
+        showDeleteSingleModal(notificationId);
+      }
+    }
+  });
+
+  $(document).on('click', '.notification-card button[title="Okundu olarak işaretle"]', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const card = $(this).closest('.notification-card');
+    const notificationId = card.attr('data-notification-id');
+    if (notificationId) {
+      if (window.currentServerId) {
+        // Server detail sayfası için
+        markServerNotificationAsRead(notificationId);
+      } else {
+        // Ana sayfa için normal işlem
+        markAsRead(notificationId);
+      }
     }
   });
 
@@ -1113,7 +1224,7 @@ $(document).ready(function () {
         $loading.hide();
         if (data.notifications && data.notifications.length > 0) {
           data.notifications.forEach(function (notif) {
-            $list.append(createServerNotificationHtml(notif));
+            $list.append(createUnifiedNotificationHtml(notif, true));
           });
           // Pagination kontrolü
           window.hasMoreServerNotifications = !!(data.pagination && data.pagination.has_next);
@@ -1138,55 +1249,6 @@ $(document).ready(function () {
         $loadMoreBtn.addClass('hidden').hide();
       });
   }
-
-  // Bildirim silme (tekli)
-  $(document).off('click', '.delete-server-notification-btn').on('click', '.delete-server-notification-btn', function () {
-    const notifId = $(this).data('id');
-    if (!notifId) return;
-    if (!confirm('Bu bildirimi silmek istediğine emin misin?')) return;
-    $.ajax({
-      url: `${API_BASE_URL}/notifications/${notifId}`,
-      method: 'DELETE',
-      success: function () {
-        loadServerNotifications(window.currentServerId, 1, false);
-      },
-      error: function () {
-        alert('Bildirim silinirken hata oluştu');
-      }
-    });
-  });
-
-  // Bildirim okundu olarak işaretle (tekli)
-  $(document).off('click', '.mark-read-server-notification-btn').on('click', '.mark-read-server-notification-btn', function () {
-    const notifId = $(this).data('id');
-    if (!notifId) return;
-    $.ajax({
-      url: `${API_BASE_URL}/notifications/read/${notifId}`,
-      method: 'PUT',
-      success: function () {
-        loadServerNotifications(window.currentServerId, 1, false);
-      },
-      error: function () {
-        alert('Bildirim okundu olarak işaretlenirken hata oluştu');
-      }
-    });
-  });
-
-  // Toplu silme butonu (tüm sunucu bildirimleri)
-  $('#delete-all-server-notifications').off('click').on('click', function () {
-    if (!window.currentServerId) return;
-    if (!confirm('Bu sunucuya ait TÜM bildirimleri silmek istediğine emin misin?')) return;
-    $.ajax({
-      url: `${API_BASE_URL}/notifications/server/${window.currentServerId}`,
-      method: 'DELETE',
-      success: function () {
-        loadServerNotifications(window.currentServerId, 1, false);
-      },
-      error: function () {
-        alert('Tüm bildirimler silinirken hata oluştu');
-      }
-    });
-  });
 
   // Hata gösterme fonksiyonu
   function showError(message) {

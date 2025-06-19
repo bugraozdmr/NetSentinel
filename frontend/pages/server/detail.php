@@ -75,7 +75,7 @@
             </svg>
             Yükleniyor...
         </div>
-        <ul id="notifications-list" class="space-y-3"></ul>
+        <ul id="notifications-list" class="space-y-4"></ul>
         
         <!-- Load More Button for Server Notifications -->
         <div class="text-center py-4">
