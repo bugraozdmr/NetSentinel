@@ -86,7 +86,8 @@ class NotificationService
             $this->addNotification([
                 "server_id" => $serverId,
                 "message" => $message,
-                "notification_type" => "status_change"
+                "notification_type" => "status_change",
+                "status" => "unread"
             ]);
             return;
         }
@@ -167,7 +168,8 @@ class NotificationService
             "server_id" => $serverId,
             "message" => $message,
             "notification_type" => "first_down",
-            "down_count" => 1
+            "down_count" => 1,
+            "status" => "unread"
         ]);
     }
 
@@ -182,7 +184,8 @@ class NotificationService
             "server_id" => $serverId,
             "message" => $message,
             "notification_type" => "repeated_down",
-            "down_count" => $count
+            "down_count" => $count,
+            "status" => "unread"
         ]);
     }
 
@@ -197,7 +200,8 @@ class NotificationService
             "server_id" => $serverId,
             "message" => $message,
             "notification_type" => "long_term_down",
-            "down_count" => 0
+            "down_count" => 0,
+            "status" => "unread"
         ]);
     }
 }

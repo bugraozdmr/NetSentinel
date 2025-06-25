@@ -17,6 +17,9 @@ return [
         "notifications" => "NotificationController@getNotifications",
         "notifications/server" => "NotificationController@getNotificationsByServerId",
         "notifications/count" => "NotificationController@notificationCountAction",
+
+        // Settings
+        "settings" => "SettingsController@get",
     ],
     "POST" => [
         // Servers
@@ -27,6 +30,10 @@ return [
 
         // Notifications
         "notifications" => "NotificationController@addNotification",
+
+        // Settings
+        "settings" => "SettingsController@save",
+        "settings/config" => "SettingsController@updateConfig",
     ],
     "PUT" => [
         // Servers

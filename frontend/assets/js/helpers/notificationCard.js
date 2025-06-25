@@ -207,10 +207,11 @@ function getTypeBadgeText(type) {
  */
 async function markAsRead(notificationId, cardElement) {
     try {
-        const response = await fetch(`${API_BASE_URL}/notifications/read/${notificationId}`, {
+        const response = await fetch(`${API_BASE_URL()}/notifications/read/${notificationId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' }
         });
+        const data = await response.json();
 
         if (response.ok) {
             // Kartı güncelle
@@ -228,13 +229,8 @@ async function markAsRead(notificationId, cardElement) {
                 title.classList.add('text-slate-300');
             }
 
-            // Okundu butonunu kaldır
-            const markReadBtn = cardElement.querySelector('[title="Okundu olarak işaretle"]');
-            if (markReadBtn) markReadBtn.remove();
-
             showSuccessToast('Bildirim okundu olarak işaretlendi');
         } else {
-            const data = await response.json();
             showErrorToast(data.message || 'Bildirim işaretlenirken hata oluştu');
         }
     } catch (error) {
@@ -246,29 +242,23 @@ async function markAsRead(notificationId, cardElement) {
  * Bildirimi siler
  */
 async function deleteNotification(notificationId, cardElement) {
-    if (!confirm('Bu bildirimi silmek istediğinizden emin misiniz?')) {
-        return;
-    }
-
     try {
-        const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}`, {
+        const response = await fetch(`${API_BASE_URL()}/notifications/${notificationId}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' }
         });
+        const data = await response.json();
 
         if (response.ok) {
-            // Kartı animasyonla kaldır
-            cardElement.style.transition = 'all 0.3s ease';
-            cardElement.style.transform = 'translateX(100%)';
+            // Kartı kaldır
             cardElement.style.opacity = '0';
-
+            cardElement.style.transform = 'scale(0.95)';
             setTimeout(() => {
                 cardElement.remove();
             }, 300);
 
             showSuccessToast('Bildirim silindi');
         } else {
-            const data = await response.json();
             showErrorToast(data.message || 'Bildirim silinirken hata oluştu');
         }
     } catch (error) {

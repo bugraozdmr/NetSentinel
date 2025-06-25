@@ -4,7 +4,7 @@ import { createModernNotificationCard } from "./helpers/notificationCard.js";
 $(document).ready(function () {
   function updateNotificationCount() {
     $.ajax({
-      url: `${API_BASE_URL}/notifications/count/all`,
+      url: `${API_BASE_URL()}/notifications/count/all`,
       method: "GET",
       dataType: "json",
       success: function (data) {
@@ -12,9 +12,9 @@ $(document).ready(function () {
         const $badge = $('button[aria-label="notifications"] span');
 
         if (count && count > 0) {
-          $badge.text(count).show();
+          $badge.text(count).removeClass('hidden');
         } else {
-          $badge.hide();
+          $badge.addClass('hidden');
         }
       },
       error: function () {
@@ -290,7 +290,7 @@ $(document).ready(function () {
     }
 
     $.ajax({
-      url: `${API_BASE_URL}/servers/paginated?${params.toString()}`,
+      url: `${API_BASE_URL()}/servers/paginated?${params.toString()}`,
       method: "GET",
       dataType: "json",
       success: function (data) {
@@ -330,7 +330,7 @@ $(document).ready(function () {
 
   function updateSummaryBarWithStats() {
     $.ajax({
-      url: `${API_BASE_URL}/servers/stats`,
+      url: `${API_BASE_URL()}/servers/stats`,
       method: "GET",
       dataType: "json",
       success: function (data) {
@@ -452,7 +452,7 @@ $(document).ready(function () {
   $confirmDeleteBtn.on("click", function () {
     if (!selectedServerId) return;
     $.ajax({
-      url: `${API_BASE_URL}/servers/delete/${selectedServerId}`,
+      url: `${API_BASE_URL()}/servers/delete/${selectedServerId}`,
       method: "DELETE",
       success: function () {
         allServers = allServers.filter(
@@ -497,14 +497,14 @@ $(document).ready(function () {
       $errorMsg.addClass("hidden").text("");
 
       $.ajax({
-        url: `${API_BASE_URL}/servers`,
+        url: `${API_BASE_URL()}/servers`,
         method: "POST",
         contentType: "application/json",
         data: JSON.stringify(formData),
         success: function () {
           $addForm[0].reset();
           $successMsg.removeClass("hidden");
-          window.location.href = `/${APP_NAME}/`;
+          window.location.href = `/${APP_NAME()}/`;
         },
         error: function (xhr) {
           const msg = xhr.responseJSON?.message || "Sunucu eklenemedi.";
@@ -521,7 +521,7 @@ $(document).ready(function () {
 
     const id = target.getAttribute("data-id");
 
-    window.location.href = `/${APP_NAME}/server/updateServer/${id}`;
+    window.location.href = `/${APP_NAME()}/server/updateServer/${id}`;
   });
 
   const $editFormWrapper = $("#editFormWrapper");
@@ -539,7 +539,7 @@ $(document).ready(function () {
       `);
 
       $.ajax({
-        url: `${API_BASE_URL}/server/${serverId}`,
+        url: `${API_BASE_URL()}/server/${serverId}`,
         method: "GET",
         dataType: "json",
         success: function (res) {
@@ -594,12 +594,12 @@ $(document).ready(function () {
     console.log('Update outgoing data:', formData);
 
     $.ajax({
-      url: `${API_BASE_URL}/servers/edit/${serverId}`,
+      url: `${API_BASE_URL()}/servers/edit/${serverId}`,
       method: "PUT",
       contentType: "application/json",
       data: JSON.stringify(formData),
       success: function () {
-        window.location.href = `/${APP_NAME}/`;
+        window.location.href = `/${APP_NAME()}/`;
       },
       error: function (xhr) {
         const errMsg = xhr.responseJSON?.errors || xhr.responseJSON?.message || "Sunucu güncellenemedi.";
@@ -614,7 +614,7 @@ $(document).ready(function () {
   $(document).on("click", ".detail-btn", function () {
     const serverId = $(this).data("id");
     if (serverId) {
-      window.location.href = `/${APP_NAME}/server/detail/${serverId}`;
+      window.location.href = `/${APP_NAME()}/server/detail/${serverId}`;
     }
   });
 
@@ -641,7 +641,7 @@ $(document).ready(function () {
     }
 
     $.ajax({
-      url: `${API_BASE_URL}/notifications/`,
+      url: `${API_BASE_URL()}/notifications/`,
       method: "GET",
       data: {
         page: page,
@@ -705,7 +705,7 @@ $(document).ready(function () {
       $loadMoreBtn.hide();
     }
 
-    $.get(`${API_BASE_URL}/notifications/server/${serverId}`, {
+    $.get(`${API_BASE_URL()}/notifications/server/${serverId}`, {
       page: page,
       limit: 20
     })
@@ -769,7 +769,7 @@ $(document).ready(function () {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}`, {
+      const response = await fetch(`${API_BASE_URL()}/notifications/${notificationId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -801,7 +801,7 @@ $(document).ready(function () {
   // Server detail sayfası için özel okundu işaretleme fonksiyonu
   async function markServerNotificationAsRead(notificationId) {
     try {
-      const response = await fetch(`${API_BASE_URL}/notifications/read/${notificationId}`, {
+      const response = await fetch(`${API_BASE_URL()}/notifications/read/${notificationId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -843,7 +843,7 @@ $(document).ready(function () {
   // Ana sayfa için okundu işaretleme fonksiyonu
   async function markAsRead(notificationId) {
     try {
-      const response = await fetch(`${API_BASE_URL}/notifications/read/${notificationId}`, {
+      const response = await fetch(`${API_BASE_URL()}/notifications/read/${notificationId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -898,7 +898,7 @@ $(document).ready(function () {
     if (!window.currentNotificationId) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/notifications/${window.currentNotificationId}`, {
+      const response = await fetch(`${API_BASE_URL()}/notifications/${window.currentNotificationId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -1050,28 +1050,28 @@ $(document).ready(function () {
 
   //? sayfayı yenile belirlitilen aralıklarda
   if (
-    window.location.pathname === `/${APP_NAME}/` ||
-    window.location.pathname === `/${APP_NAME}/index.php`
+    window.location.pathname === `/${APP_NAME()}/` ||
+    window.location.pathname === `/${APP_NAME()}/index.php`
   ) {
     //! burda çekme yapıldı index özel
     fetchServers();
 
-    if (ENABLE_REAL_TIME_UPDATES) {
+    if (ENABLE_REAL_TIME_UPDATES()) {
       // Real-time updates instead of page refresh
       setInterval(function () {
         console.log('Performing real-time update...');
         fetchRealTimeUpdate();
-      }, REAL_TIME_INTERVAL);
+      }, REAL_TIME_INTERVAL());
     } else {
       // Fallback to page refresh (legacy behavior)
       setInterval(function () {
         location.reload();
-      }, PAGE_REFRESH_INTERVAL);
+      }, PAGE_REFRESH_INTERVAL());
     }
   }
 
   //? DETAIL SAYFASI
-  if (window.location.pathname.includes(`/${APP_NAME}/server/detail/`)) {
+  if (window.location.pathname.includes(`/${APP_NAME()}/server/detail/`)) {
     const serverId = window.location.pathname.split('/').pop();
     if (serverId && !isNaN(serverId)) {
       loadServerDetail(serverId);
@@ -1089,7 +1089,7 @@ $(document).ready(function () {
     window.currentServerId = serverId;
 
     $.ajax({
-      url: `${API_BASE_URL}/server/${serverId}`,
+      url: `${API_BASE_URL()}/server/${serverId}`,
       method: 'GET',
       dataType: 'json',
       success: function (data) {
@@ -1324,7 +1324,7 @@ $(document).ready(function () {
       $loadMoreBtn.hide();
     }
 
-    $.get(`${API_BASE_URL}/notifications/server/${serverId}`, {
+    $.get(`${API_BASE_URL()}/notifications/server/${serverId}`, {
       page: page,
       limit: 10
     })
@@ -1464,7 +1464,7 @@ $(document).ready(function () {
   // Real-time update function
   function fetchRealTimeUpdate() {
     $.ajax({
-      url: `${API_BASE_URL}/realtime`,
+      url: `${API_BASE_URL()}/realtime`,
       method: 'GET',
       dataType: 'json',
       success: function (data) {
@@ -1522,14 +1522,14 @@ $(document).ready(function () {
           </td>
           <td class="px-4 py-3">
             <div class="flex items-center gap-2">
-              <a href="/${APP_NAME}/server/detail/${server.id}" 
+              <a href="/${APP_NAME()}/server/detail/${server.id}" 
                  class="text-blue-400 hover:text-blue-300 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                 </svg>
               </a>
-              <a href="/${APP_NAME}/server/updateServer/${server.id}" 
+              <a href="/${APP_NAME()}/server/updateServer/${server.id}" 
                  class="text-yellow-400 hover:text-yellow-300 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -1555,4 +1555,31 @@ $(document).ready(function () {
       }
     }
   }
+
+  // Initialize update intervals based on config.js values
+  function initializeUpdateIntervals() {
+    // Clear any existing intervals
+    if (window.updateInterval) {
+      clearInterval(window.updateInterval);
+    }
+    if (window.pageRefreshInterval) {
+      clearInterval(window.pageRefreshInterval);
+    }
+
+    // Set up intervals based on current config
+    if (ENABLE_REAL_TIME_UPDATES()) {
+      // Real-time updates
+      console.log(`Setting up real-time updates every ${REAL_TIME_INTERVAL()}ms`);
+      window.updateInterval = setInterval(fetchRealTimeUpdate, REAL_TIME_INTERVAL());
+    } else {
+      // Page refresh
+      console.log(`Setting up page refresh every ${PAGE_REFRESH_INTERVAL()}ms`);
+      window.pageRefreshInterval = setInterval(() => {
+        location.reload();
+      }, PAGE_REFRESH_INTERVAL());
+    }
+  }
+
+  // Initialize intervals
+  initializeUpdateIntervals();
 });

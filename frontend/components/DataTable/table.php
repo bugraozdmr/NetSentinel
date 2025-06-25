@@ -1,4 +1,17 @@
 <div class="min-h-screen bg-slate-900 text-white p-8">
+    <!-- Header with Settings Button -->
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-white">Sunucu Durumu</h1>
+        <div class="flex items-center gap-4">
+            <a href="/netsentinel/pages/notifications.php" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                <i class="fas fa-bell mr-2"></i>Bildirimler
+            </a>
+            <a href="/netsentinel/pages/settings.php" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition-colors">
+                <i class="fas fa-cog mr-2"></i>Ayarlar
+            </a>
+        </div>
+    </div>
+
     <!-- Özet Bar -->
     <div class="flex flex-wrap gap-6 mb-8">
         <div class="bg-slate-800 rounded-xl px-8 py-4 text-center flex-1">

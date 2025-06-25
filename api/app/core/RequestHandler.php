@@ -28,15 +28,25 @@ class RequestHandler
             $uri = $requestedRoute;
         }
 
+        // Clean up the URI
+        $uri = trim($uri, '/');
+        
+        // Debug log
+        error_log("RequestHandler - Method: $method, URI: $uri");
+
         $resolved = $this->router->resolve($method, $uri);
 
         if ($resolved === null) {
             http_response_code(404);
-            echo json_encode(["error" => "Route couldn't found"]);
+            echo json_encode(["error" => "Route couldn't found", "uri" => $uri, "method" => $method]);
             return;
         }
         
         [$controllerName, $methodName, $id] = $resolved;
+        
+        // Debug log
+        error_log("RequestHandler - Resolved: Controller=$controllerName, Method=$methodName, ID=$id");
+        
         require_once __DIR__ . '/../controllers/' . $controllerName . '.php';
         
         $controller = new $controllerName($this->pdo);

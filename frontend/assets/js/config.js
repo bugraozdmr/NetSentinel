@@ -1,11 +1,18 @@
-export const API_BASE_URL = "http://192.168.1.34/netsentinel/api";
-export const APP_NAME = "netsentinel";
+// Default configuration values
+const DEFAULT_CONFIG = {
+    apiBaseUrl: "http://192.168.253.5/netsentinel/api",
+    appName: "netsentinel",
+    updateMode: "page_refresh",
+    updateInterval: 300,
+    timezone: "Europe/Istanbul",
+    language: "tr"
+};
 
-// Real-time update interval (5 minutes)
-export const REAL_TIME_INTERVAL = 300000;
-
-// Page refresh interval (10 seconds) - TEST MODE
-export const PAGE_REFRESH_INTERVAL = 10000;
-
-// Enable real-time updates instead of page refresh
-export const ENABLE_REAL_TIME_UPDATES = false;
+// Config değerlerini doğrudan kullan
+export const API_BASE_URL = () => DEFAULT_CONFIG.apiBaseUrl;
+export const APP_NAME = () => DEFAULT_CONFIG.appName;
+export const REAL_TIME_INTERVAL = () => DEFAULT_CONFIG.updateInterval * 1000;
+export const PAGE_REFRESH_INTERVAL = () => DEFAULT_CONFIG.updateInterval * 1000;
+export const ENABLE_REAL_TIME_UPDATES = () => DEFAULT_CONFIG.updateMode === 'real_time';
+export const TIMEZONE = () => DEFAULT_CONFIG.timezone;
+export const LANGUAGE = () => DEFAULT_CONFIG.language;

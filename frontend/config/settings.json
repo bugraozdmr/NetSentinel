@@ -1,0 +1,7 @@
+{
+    "API_BASE_URL": "http://192.168.253.5/netsentinel/api",
+    "APP_NAME": "netsentinel",
+    "PAGE_REFRESH_INTERVAL": 60000,
+    "REAL_TIME_INTERVAL": 300000,
+    "ENABLE_REAL_TIME_UPDATES": false
+}

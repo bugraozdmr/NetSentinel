@@ -26,7 +26,7 @@ $route = implode('/', $segments);
 
 $route = $route === '' ? 'home' : $route;
 
-$allowedPages = ['home', 'server/addServer', 'server/updateServer', 'server/detail', 'notifications'];
+$allowedPages = ['home', 'server/addServer', 'server/updateServer', 'server/detail', 'notifications', 'settings'];
 $contentFile = __DIR__ . "/pages/{$route}.php";
 
 if ($route === 'server/updateServer' && $id === null) {

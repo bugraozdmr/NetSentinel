@@ -1,0 +1,9 @@
+{
+    "apiBaseUrl": "http://192.168.1.34/netsentinel/api",
+    "appName": "netsentinel",
+    "updateMode": "page_refresh",
+    "updateInterval": 300,
+    "timezone": "Europe/Istanbul",
+    "language": "tr",
+    "updatedAt": "2025-01-27 12:00:00"
+}
